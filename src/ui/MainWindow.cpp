@@ -108,7 +108,6 @@ void MainWindow::on_pushButton_clicked()
 
 	QString tracks = p_proxy.GetTracks();
 	model = new BeamItemModel(QStringList{"Phi/Theta", "Beam number"}, tracks);
-//	model.setupModelData(p_proxy.GetTracks(), model.getItem(model.index(0, 0, QModelIndex())));
 	ui->treeView_tracks->setModel(model);
 }
 

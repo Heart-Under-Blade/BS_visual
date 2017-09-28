@@ -147,8 +147,6 @@ void ParticleProxy::Trace(double beta, double gamma, double alpha, int reflNum)
 	double gammaR = DegToRad(gamma);
 	tracing->SplitBeamByParticle(betaR, gammaR, outBeams, DegToRad(alpha));
 
-	double sinBeta = sin(beta);
-
 	for (Beam &beam : outBeams)
 	{
 		BeamInfo info;
@@ -179,23 +177,22 @@ void ParticleProxy::Trace(double beta, double gamma, double alpha, int reflNum)
 		info.phiDeg = RadToDeg(phi);
 		info.track = RecoverTrack(beam, particle->facetNum);
 
-		QString dir = QString("%1/%2").arg(info.phiDeg).arg(info.thetaDeg);
+		QString dir = QString("%1, %2").arg(info.phiDeg).arg(info.thetaDeg);
 
 		info.M   << M[0][0] << M[0][1] << M[0][2] << M[0][3]
 				 << M[1][0] << M[1][1] << M[1][2] << M[1][3]
 				 << M[2][0] << M[2][1] << M[2][2] << M[2][3]
 				 << M[3][0] << M[3][1] << M[3][2] << M[3][3];
 
-
 		if (beamData.contains(dir))
 		{
 			auto it = beamData.find(dir);
-			(*it).insert(QString::number((*it).size()+1)+":", info);
+			(*it).insert("("+QString::number((*it).size()+1)+"): "+info.track, info);
 		}
 		else
 		{
 			BeamData data;
-			data.insert(QString::number(data.size()+1)+":", info);
+			data.insert("("+QString::number(data.size()+1)+"): "+info.track, info);
 			beamData.insert(dir, data);
 		}
 //		contr.scatMatrix.insert(0, thetaDeg, area*M);
@@ -236,7 +233,7 @@ QString ParticleProxy::GetTracks()
 		foreach (QString dkey, data.keys())
 		{
 			BeamInfo info = data.value(dkey);
-			res += " "+dkey+"\t"+info.track+"\n";
+			res += " "+dkey+"\n";
 		}
 	}
 
