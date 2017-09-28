@@ -103,7 +103,7 @@ void MainWindow::on_pushButton_clicked()
 	double a = ui->doubleSpinBox_alpha->value();
 
 	int reflNum = ui->spinBox_inter->value();
-
+qDebug() << "----";
 	p_proxy.Trace(b, g, a, reflNum);
 
 	QString tracks = p_proxy.GetTracks();

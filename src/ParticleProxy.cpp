@@ -14,10 +14,14 @@
 #include "TracingConcave.h"
 #include "Mueller.hpp"
 
+#include <iostream>
 using namespace std;
 
 ParticleProxy::ParticleProxy()
 {
+	particle = nullptr;
+	tracing = nullptr;
+
 	particleTypes.insert(PType::Column, "Column");
 	particleTypes.insert(PType::HollowColumn, "Hollow column");
 	particleTypes.insert(PType::Bullet, "Bullet");
@@ -27,8 +31,15 @@ ParticleProxy::ParticleProxy()
 
 ParticleProxy::~ParticleProxy()
 {
-	delete particle;
-	delete tracing;
+	if (particle != nullptr)
+	{
+		delete particle;
+	}
+
+	if (tracing != nullptr)
+	{
+		delete tracing;
+	}
 }
 
 QString RecoverTrack(const Beam &beam, int facetNum)
@@ -232,7 +243,6 @@ QString ParticleProxy::GetTracks()
 
 		foreach (QString dkey, data.keys())
 		{
-			BeamInfo info = data.value(dkey);
 			res += " "+dkey+"\n";
 		}
 	}
