@@ -2,9 +2,11 @@
 
 #include <QMainWindow>
 #include <QtCharts/QScatterSeries>
+#include <QChartView>
 
 #include "ParticleProxy.h"
-#include "ChartView.h"
+
+QT_CHARTS_USE_NAMESPACE
 
 class BeamItemModel;
 
@@ -31,8 +33,9 @@ private:
 	Ui::MainWindow *ui;
 	ParticleProxy p_proxy;
 	BeamItemModel *model;
-	ChartView *chartView;
+	QChartView *chartView;
 	QScatterSeries *angleSeries;
+	int precision;
 
 private:
 	void FillParticleTypes();

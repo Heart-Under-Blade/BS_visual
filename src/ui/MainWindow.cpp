@@ -15,6 +15,7 @@ MainWindow::MainWindow(QWidget *parent) :
 	ui->setupUi(this);
 
 	model = nullptr;
+	precision = 4;
 
 	double h = 80, d = 40, ri = 1.31, b = 45, g = 30;
 	int ir = 3;
@@ -184,7 +185,7 @@ void MainWindow::SetChart()
 	angleSeries->attachAxis(phiAxis);
 	angleSeries->attachAxis(thetaAxis);
 
-	chartView = new ChartView();
+	chartView = new QChartView();
 	chartView->setChart(chart);
 //	chartView->setRenderHint(QPainter::Antialiasing);
 
@@ -206,28 +207,28 @@ void MainWindow::on_treeView_tracks_clicked(const QModelIndex &index)
 
 	BeamInfo info = p_proxy.GetBeamByNumber(beamNumber);
 	ui->label_track->setText(info.track);
-	ui->label_area->setText(QString::number(info.area));
-	ui->label_optPath->setText(QString::number(info.beam.opticalPath));
+	ui->label_area->setText(QString::number(info.area, 'g', precision));
+	ui->label_optPath->setText(QString::number(info.beam.opticalPath, 'g', precision));
 
-	ui->label_m11->setText(QString::number(info.M.at(0)));
-	ui->label_m12->setText(QString::number(info.M.at(1)));
-	ui->label_m13->setText(QString::number(info.M.at(2)));
-	ui->label_m14->setText(QString::number(info.M.at(3)));
+	ui->label_m11->setText(QString::number(info.M.at(0), 'g', precision));
+	ui->label_m12->setText(QString::number(info.M.at(1), 'g', precision));
+	ui->label_m13->setText(QString::number(info.M.at(2), 'g', precision));
+	ui->label_m14->setText(QString::number(info.M.at(3), 'g', precision));
 
-	ui->label_m21->setText(QString::number(info.M.at(4)));
-	ui->label_m22->setText(QString::number(info.M.at(5)));
-	ui->label_m23->setText(QString::number(info.M.at(6)));
-	ui->label_m24->setText(QString::number(info.M.at(7)));
+	ui->label_m21->setText(QString::number(info.M.at(4), 'g', precision));
+	ui->label_m22->setText(QString::number(info.M.at(5), 'g', precision));
+	ui->label_m23->setText(QString::number(info.M.at(6), 'g', precision));
+	ui->label_m24->setText(QString::number(info.M.at(7), 'g', precision));
 
-	ui->label_m31->setText(QString::number(info.M.at(8)));
-	ui->label_m32->setText(QString::number(info.M.at(9)));
-	ui->label_m33->setText(QString::number(info.M.at(10)));
-	ui->label_m34->setText(QString::number(info.M.at(11)));
+	ui->label_m31->setText(QString::number(info.M.at(8), 'g', precision));
+	ui->label_m32->setText(QString::number(info.M.at(9), 'g', precision));
+	ui->label_m33->setText(QString::number(info.M.at(10), 'g', precision));
+	ui->label_m34->setText(QString::number(info.M.at(11), 'g', precision));
 
-	ui->label_m41->setText(QString::number(info.M.at(12)));
-	ui->label_m42->setText(QString::number(info.M.at(13)));
-	ui->label_m43->setText(QString::number(info.M.at(14)));
-	ui->label_m44->setText(QString::number(info.M.at(15)));
+	ui->label_m41->setText(QString::number(info.M.at(12), 'g', precision));
+	ui->label_m42->setText(QString::number(info.M.at(13), 'g', precision));
+	ui->label_m43->setText(QString::number(info.M.at(14), 'g', precision));
+	ui->label_m44->setText(QString::number(info.M.at(15), 'g', precision));
 }
 
 void MainWindow::on_lineEdit_search_textChanged(const QString &arg1)
@@ -250,5 +251,9 @@ void MainWindow::on_lineEdit_search_textChanged(const QString &arg1)
 	{
 		SetTrackTree();
 		ui->treeView_tracks->collapseAll();
+
+		QFont stFont;
+		stFont.setItalic(true);
+		ui->lineEdit_search->setFont(stFont);
 	}
 }

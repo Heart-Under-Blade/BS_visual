@@ -243,184 +243,202 @@
            <widget class="QGraphicsView" name="graphicsView_2"/>
           </item>
           <item row="0" column="1">
-           <layout class="QFormLayout" name="formLayout_4">
-            <item row="0" column="0">
-             <widget class="QLabel" name="label_6">
-              <property name="text">
-               <string>Track:</string>
-              </property>
-             </widget>
-            </item>
-            <item row="0" column="1">
-             <widget class="QLabel" name="label_track">
-              <property name="text">
-               <string>&lt;None&gt;</string>
-              </property>
-             </widget>
-            </item>
-            <item row="1" column="0">
-             <widget class="QLabel" name="label_8">
-              <property name="text">
-               <string>Area:</string>
-              </property>
-             </widget>
-            </item>
-            <item row="1" column="1">
-             <widget class="QLabel" name="label_area">
-              <property name="text">
-               <string>&lt;None&gt;</string>
-              </property>
-             </widget>
-            </item>
-            <item row="2" column="0">
-             <widget class="QLabel" name="label_10">
-              <property name="text">
-               <string>Optical path:</string>
-              </property>
-             </widget>
-            </item>
-            <item row="2" column="1">
-             <widget class="QLabel" name="label_optPath">
-              <property name="text">
-               <string>&lt;None&gt;</string>
-              </property>
-             </widget>
-            </item>
-            <item row="4" column="0" colspan="2">
-             <widget class="QGroupBox" name="groupBox_5">
-              <property name="title">
-               <string>Muller's matrix</string>
-              </property>
-              <layout class="QGridLayout" name="gridLayout_5">
-               <item row="4" column="3">
-                <widget class="QLabel" name="label_m44">
+           <widget class="QWidget" name="widget" native="true">
+            <property name="minimumSize">
+             <size>
+              <width>300</width>
+              <height>0</height>
+             </size>
+            </property>
+            <layout class="QGridLayout" name="gridLayout_6">
+             <item row="0" column="0">
+              <layout class="QFormLayout" name="formLayout_4">
+               <item row="0" column="0">
+                <widget class="QLabel" name="label_6">
                  <property name="text">
-                  <string>&lt;M44&gt;</string>
+                  <string>Track:</string>
                  </property>
                 </widget>
                </item>
-               <item row="4" column="2">
-                <widget class="QLabel" name="label_m43">
-                 <property name="text">
-                  <string>&lt;M43&gt;</string>
+               <item row="0" column="1">
+                <widget class="QLabel" name="label_track">
+                 <property name="font">
+                  <font>
+                   <weight>75</weight>
+                   <bold>true</bold>
+                  </font>
                  </property>
-                </widget>
-               </item>
-               <item row="3" column="3">
-                <widget class="QLabel" name="label_m34">
                  <property name="text">
-                  <string>&lt;M34&gt;</string>
-                 </property>
-                </widget>
-               </item>
-               <item row="4" column="1">
-                <widget class="QLabel" name="label_m42">
-                 <property name="text">
-                  <string>&lt;M42&gt;</string>
-                 </property>
-                </widget>
-               </item>
-               <item row="3" column="0">
-                <widget class="QLabel" name="label_m31">
-                 <property name="text">
-                  <string>&lt;M31&gt;</string>
-                 </property>
-                </widget>
-               </item>
-               <item row="2" column="3">
-                <widget class="QLabel" name="label_m24">
-                 <property name="text">
-                  <string>&lt;M24&gt;</string>
-                 </property>
-                </widget>
-               </item>
-               <item row="1" column="2">
-                <widget class="QLabel" name="label_m13">
-                 <property name="text">
-                  <string>&lt;M13&gt;</string>
-                 </property>
-                </widget>
-               </item>
-               <item row="1" column="1">
-                <widget class="QLabel" name="label_m12">
-                 <property name="text">
-                  <string>&lt;M12&gt;</string>
-                 </property>
-                </widget>
-               </item>
-               <item row="2" column="2">
-                <widget class="QLabel" name="label_m23">
-                 <property name="text">
-                  <string>&lt;M23&gt;</string>
-                 </property>
-                </widget>
-               </item>
-               <item row="3" column="2">
-                <widget class="QLabel" name="label_m33">
-                 <property name="text">
-                  <string>&lt;M33&gt;</string>
-                 </property>
-                </widget>
-               </item>
-               <item row="1" column="3">
-                <widget class="QLabel" name="label_m14">
-                 <property name="text">
-                  <string>&lt;M14&gt;</string>
-                 </property>
-                </widget>
-               </item>
-               <item row="2" column="0">
-                <widget class="QLabel" name="label_m21">
-                 <property name="text">
-                  <string>&lt;M21&gt;</string>
-                 </property>
-                </widget>
-               </item>
-               <item row="3" column="1">
-                <widget class="QLabel" name="label_m32">
-                 <property name="text">
-                  <string>&lt;M32&gt;</string>
+                  <string>&lt;None&gt;</string>
                  </property>
                 </widget>
                </item>
                <item row="1" column="0">
-                <widget class="QLabel" name="label_m11">
+                <widget class="QLabel" name="label_8">
                  <property name="text">
-                  <string>&lt;M11&gt;</string>
+                  <string>Area:</string>
                  </property>
                 </widget>
                </item>
-               <item row="4" column="0">
-                <widget class="QLabel" name="label_m41">
+               <item row="1" column="1">
+                <widget class="QLabel" name="label_area">
                  <property name="text">
-                  <string>&lt;M41&gt;</string>
+                  <string>&lt;None&gt;</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="2" column="0">
+                <widget class="QLabel" name="label_10">
+                 <property name="text">
+                  <string>Optical path:</string>
                  </property>
                 </widget>
                </item>
                <item row="2" column="1">
-                <widget class="QLabel" name="label_m22">
+                <widget class="QLabel" name="label_optPath">
                  <property name="text">
-                  <string>&lt;M22&gt;</string>
+                  <string>&lt;None&gt;</string>
                  </property>
                 </widget>
                </item>
+               <item row="4" column="0" colspan="2">
+                <widget class="QGroupBox" name="groupBox_5">
+                 <property name="title">
+                  <string>Muller's matrix</string>
+                 </property>
+                 <layout class="QGridLayout" name="gridLayout_5">
+                  <item row="4" column="3">
+                   <widget class="QLabel" name="label_m44">
+                    <property name="text">
+                     <string>&lt;M44&gt;</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="4" column="2">
+                   <widget class="QLabel" name="label_m43">
+                    <property name="text">
+                     <string>&lt;M43&gt;</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="3" column="3">
+                   <widget class="QLabel" name="label_m34">
+                    <property name="text">
+                     <string>&lt;M34&gt;</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="4" column="1">
+                   <widget class="QLabel" name="label_m42">
+                    <property name="text">
+                     <string>&lt;M42&gt;</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="3" column="0">
+                   <widget class="QLabel" name="label_m31">
+                    <property name="text">
+                     <string>&lt;M31&gt;</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="2" column="3">
+                   <widget class="QLabel" name="label_m24">
+                    <property name="text">
+                     <string>&lt;M24&gt;</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="1" column="2">
+                   <widget class="QLabel" name="label_m13">
+                    <property name="text">
+                     <string>&lt;M13&gt;</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="1" column="1">
+                   <widget class="QLabel" name="label_m12">
+                    <property name="text">
+                     <string>&lt;M12&gt;</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="2" column="2">
+                   <widget class="QLabel" name="label_m23">
+                    <property name="text">
+                     <string>&lt;M23&gt;</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="3" column="2">
+                   <widget class="QLabel" name="label_m33">
+                    <property name="text">
+                     <string>&lt;M33&gt;</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="1" column="3">
+                   <widget class="QLabel" name="label_m14">
+                    <property name="text">
+                     <string>&lt;M14&gt;</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="2" column="0">
+                   <widget class="QLabel" name="label_m21">
+                    <property name="text">
+                     <string>&lt;M21&gt;</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="3" column="1">
+                   <widget class="QLabel" name="label_m32">
+                    <property name="text">
+                     <string>&lt;M32&gt;</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="1" column="0">
+                   <widget class="QLabel" name="label_m11">
+                    <property name="text">
+                     <string>&lt;M11&gt;</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="4" column="0">
+                   <widget class="QLabel" name="label_m41">
+                    <property name="text">
+                     <string>&lt;M41&gt;</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="2" column="1">
+                   <widget class="QLabel" name="label_m22">
+                    <property name="text">
+                     <string>&lt;M22&gt;</string>
+                    </property>
+                   </widget>
+                  </item>
+                 </layout>
+                </widget>
+               </item>
+               <item row="3" column="0" colspan="2">
+                <spacer name="verticalSpacer">
+                 <property name="orientation">
+                  <enum>Qt::Vertical</enum>
+                 </property>
+                 <property name="sizeHint" stdset="0">
+                  <size>
+                   <width>20</width>
+                   <height>40</height>
+                  </size>
+                 </property>
+                </spacer>
+               </item>
               </layout>
-             </widget>
-            </item>
-            <item row="3" column="0" colspan="2">
-             <spacer name="verticalSpacer">
-              <property name="orientation">
-               <enum>Qt::Vertical</enum>
-              </property>
-              <property name="sizeHint" stdset="0">
-               <size>
-                <width>20</width>
-                <height>40</height>
-               </size>
-              </property>
-             </spacer>
-            </item>
-           </layout>
+             </item>
+            </layout>
+           </widget>
           </item>
          </layout>
         </widget>
@@ -455,6 +473,9 @@
                 <width>300</width>
                 <height>0</height>
                </size>
+              </property>
+              <property name="editTriggers">
+               <set>QAbstractItemView::NoEditTriggers</set>
               </property>
              </widget>
             </item>
