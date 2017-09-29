@@ -4,7 +4,7 @@
 #
 #-------------------------------------------------
 
-QT       += core gui
+QT       += core gui charts
 TEMPLATE = app
 CONFIG += console c++11
 

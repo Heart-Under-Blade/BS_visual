@@ -6,17 +6,29 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>777</width>
-    <height>644</height>
+    <width>980</width>
+    <height>687</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>MainWindow</string>
   </property>
   <widget class="QWidget" name="centralWidget">
-   <layout class="QFormLayout" name="formLayout_3">
+   <layout class="QGridLayout" name="gridLayout_4">
     <item row="0" column="0">
      <widget class="QGroupBox" name="groupBox">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Minimum" vsizetype="Expanding">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
+      <property name="minimumSize">
+       <size>
+        <width>300</width>
+        <height>0</height>
+       </size>
+      </property>
       <property name="title">
        <string>Input params</string>
       </property>
@@ -224,7 +236,7 @@
        <item row="1" column="0" rowspan="2">
         <widget class="QGroupBox" name="groupBox_3">
          <property name="title">
-          <string>Selected Beam</string>
+          <string>Beam</string>
          </property>
          <layout class="QGridLayout" name="gridLayout">
           <item row="0" column="0">
@@ -414,21 +426,15 @@
         </widget>
        </item>
        <item row="0" column="0">
-        <widget class="QGroupBox" name="groupBox_4">
+        <widget class="QGroupBox" name="groupBox_scatteredBeams">
          <property name="title">
           <string>Scattered Beams</string>
          </property>
          <layout class="QGridLayout" name="gridLayout_3">
-          <item row="0" column="0">
-           <widget class="QGraphicsView" name="graphicsView"/>
-          </item>
           <item row="0" column="1">
-           <layout class="QFormLayout" name="formLayout_5">
-            <item row="1" column="0" colspan="2">
-             <widget class="QTreeView" name="treeView_tracks"/>
-            </item>
-            <item row="0" column="0" colspan="2">
-             <widget class="QLineEdit" name="lineEdit">
+           <layout class="QVBoxLayout" name="verticalLayout">
+            <item>
+             <widget class="QLineEdit" name="lineEdit_search">
               <property name="font">
                <font>
                 <italic>true</italic>
@@ -437,9 +443,38 @@
               <property name="placeholderText">
                <string>search</string>
               </property>
+              <property name="clearButtonEnabled">
+               <bool>true</bool>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QTreeView" name="treeView_tracks">
+              <property name="minimumSize">
+               <size>
+                <width>300</width>
+                <height>0</height>
+               </size>
+              </property>
              </widget>
             </item>
            </layout>
+          </item>
+          <item row="0" column="0">
+           <widget class="QWidget" name="widget_chart" native="true">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="MinimumExpanding" vsizetype="MinimumExpanding">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="minimumSize">
+             <size>
+              <width>300</width>
+              <height>300</height>
+             </size>
+            </property>
+           </widget>
           </item>
          </layout>
         </widget>
@@ -454,7 +489,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>777</width>
+     <width>980</width>
      <height>20</height>
     </rect>
    </property>

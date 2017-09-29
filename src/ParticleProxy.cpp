@@ -64,7 +64,7 @@ QString RecoverTrack(const Beam &beam, int facetNum)
 
 		for (int i = tmp_track.size()-2; i >= 0; --i)
 		{
-			track += " - " + QString::number(tmp_track.at(i));
+			track += "-" + QString::number(tmp_track.at(i));
 		}
 	}
 
@@ -127,7 +127,7 @@ void RotateMuller(const Point3f &dir, matrix &M)
 	RightRotateMueller(M, cos(tmp), sin(tmp));
 }
 
-void ParticleProxy::Trace(double beta, double gamma, double alpha, int reflNum)
+void ParticleProxy::Trace(const Angle &angle, int reflNum)
 {
 	beamData.clear();
 
@@ -154,9 +154,11 @@ void ParticleProxy::Trace(double beta, double gamma, double alpha, int reflNum)
 	}
 
 	vector<Beam> outBeams;
-	double betaR = DegToRad(beta);
-	double gammaR = DegToRad(gamma);
-	tracing->SplitBeamByParticle(betaR, gammaR, outBeams, DegToRad(alpha));
+	double betaR = DegToRad(angle.beta);
+	double gammaR = DegToRad(angle.gamma);
+	tracing->SplitBeamByParticle(betaR, gammaR, outBeams, DegToRad(angle.alpha));
+
+	int count = 0;
 
 	for (Beam &beam : outBeams)
 	{
@@ -184,9 +186,10 @@ void ParticleProxy::Trace(double beta, double gamma, double alpha, int reflNum)
 			}
 		}
 
-		info.thetaDeg = RadToDeg(theta);
+		info.thetaDeg = 180 - RadToDeg(theta);
 		info.phiDeg = RadToDeg(phi);
-		info.track = RecoverTrack(beam, particle->facetNum);
+		info.track = RecoverTrack(beam, particle->facetNum)+":";
+		info.number = ++count;
 
 		QString dir = QString("%1, %2").arg(info.phiDeg).arg(info.thetaDeg);
 
@@ -198,12 +201,12 @@ void ParticleProxy::Trace(double beta, double gamma, double alpha, int reflNum)
 		if (beamData.contains(dir))
 		{
 			auto it = beamData.find(dir);
-			(*it).insert("("+QString::number((*it).size()+1)+"): "+info.track, info);
+			(*it).insert(info.track, info);
 		}
 		else
 		{
 			BeamData data;
-			data.insert("("+QString::number(data.size()+1)+"): "+info.track, info);
+			data.insert(info.track, info);
 			beamData.insert(dir, data);
 		}
 //		contr.scatMatrix.insert(0, thetaDeg, area*M);
@@ -232,7 +235,7 @@ QString ParticleProxy::GetAdditionalParticleParam(const QString &type) const
 	return param;
 }
 
-QString ParticleProxy::GetTracks()
+QString ParticleProxy::GetBeamDataString()
 {
 	QString res;
 
@@ -243,14 +246,69 @@ QString ParticleProxy::GetTracks()
 
 		foreach (QString dkey, data.keys())
 		{
-			res += " "+dkey+"\n";
+			BeamInfo info = data.value(dkey);
+			res += " "+dkey+"\t"+QString::number(info.number)+"\n";
 		}
 	}
 
 	return res;
 }
 
-BeamInfo &ParticleProxy::GetBeamInfo(const QString &trackKey, const QString &beamKey)
+QString ParticleProxy::GetBeamDataString(const QString &searchLine)
+{
+	QString res;
+
+	foreach (QString key, beamData.keys())
+	{
+		BeamData data = beamData.value(key);
+
+		QStringList children;
+
+		foreach (QString dkey, data.keys())
+		{
+			if (dkey.startsWith(searchLine))
+			{
+				BeamInfo info = data.value(dkey);
+				children += " "+dkey+"\t"+QString::number(info.number)+"\n";
+			}
+		}
+
+		if (!children.isEmpty())
+		{
+			res += key+"\t"+QString::number(children.size())+"\n";
+			res += QString(children.join(""));
+		}
+	}
+
+	return res;
+}
+
+BeamInfo &ParticleProxy::GetBeamByKeys(const QString &trackKey, const QString &beamKey)
 {
 	return beamData[trackKey][beamKey];
+}
+
+BeamInfo &ParticleProxy::GetBeamByNumber(int number)
+{
+	foreach (QString key, beamData.keys())
+	{
+		BeamData data = beamData.value(key);
+
+		foreach (QString dkey, data.keys())
+		{
+			BeamInfo info = data.value(dkey);
+
+			if (info.number == number)
+			{
+				return data[dkey];
+			}
+		}
+	}
+
+	return beamData.first().first();
+}
+
+const TrackMap &ParticleProxy::GetTrackMap() const
+{
+	return beamData;
 }

@@ -102,6 +102,11 @@ bool BeamItemModel::removeColumns(int column, int count, const QModelIndex &pare
 {
 }
 
+bool BeamItemModel::hasChildren(const QModelIndex &parent) const
+{
+	return getItem(parent)->childCount() != 0;
+}
+
 Qt::ItemFlags BeamItemModel::flags(const QModelIndex &index) const
 {
 	if (!index.isValid())

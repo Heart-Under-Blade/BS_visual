@@ -2,13 +2,19 @@
 #include "ui_MainWindow.h"
 
 #include "BeamItemModel.h"
+
 #include <QDebug>
+#include <QtCharts/QAbstractAxis>
+#include <QtCharts/QValueAxis>
+#include <QtCharts/QPolarChart>
 
 MainWindow::MainWindow(QWidget *parent) :
 	QMainWindow(parent),
 	ui(new Ui::MainWindow)
 {
 	ui->setupUi(this);
+
+	model = nullptr;
 
 	double h = 80, d = 40, ri = 1.31, b = 45, g = 30;
 	int ir = 3;
@@ -34,6 +40,8 @@ MainWindow::MainWindow(QWidget *parent) :
 
 	FillParticleTypes();
 	SetAdditionalParamName();
+
+	SetChart();
 }
 
 MainWindow::~MainWindow()
@@ -81,7 +89,37 @@ void MainWindow::on_comboBox_types_currentIndexChanged(int index)
 	ui->comboBox_types->setCurrentIndex(index);
 }
 
-void MainWindow::on_pushButton_clicked()
+void MainWindow::DrawBeamAnglePoints()
+{
+	angleSeries->clear();
+
+	TrackMap trackMap = p_proxy.GetTrackMap();
+
+	foreach (QString tKey, trackMap.keys())
+	{
+		BeamData data = trackMap.value(tKey);
+
+		foreach (QString dKey, data.keys())
+		{
+			BeamInfo info = data.value(dKey);
+			angleSeries->append(info.phiDeg, info.thetaDeg);
+		}
+	}
+}
+
+void MainWindow::SetTrackTree()
+{
+	if (model != nullptr)
+	{
+		delete model;
+	}
+
+	QString tracks = p_proxy.GetBeamDataString();
+	model = new BeamItemModel(QStringList{"Phi, Theta", "Beam number"}, tracks);
+	ui->treeView_tracks->setModel(model);
+}
+
+void MainWindow::ReadTraceParams(Angle &angle, int &reflNum)
 {
 	QString type = ui->comboBox_types->currentText();
 	double ri = ui->doubleSpinBox_refrIndex->value();
@@ -98,52 +136,119 @@ void MainWindow::on_pushButton_clicked()
 		p_proxy.SetParticle(type, ri, h, d);
 	}
 
-	double b = ui->doubleSpinBox_beta->value();
-	double g = ui->doubleSpinBox_gamma->value();
-	double a = ui->doubleSpinBox_alpha->value();
+	angle.alpha = ui->doubleSpinBox_alpha->value();
+	angle.beta = ui->doubleSpinBox_beta->value();
+	angle.gamma = ui->doubleSpinBox_gamma->value();
 
-	int reflNum = ui->spinBox_inter->value();
-qDebug() << "----";
-	p_proxy.Trace(b, g, a, reflNum);
+	reflNum = ui->spinBox_inter->value();
+}
 
-	QString tracks = p_proxy.GetTracks();
-	model = new BeamItemModel(QStringList{"Phi/Theta", "Beam number"}, tracks);
-	ui->treeView_tracks->setModel(model);
+void MainWindow::on_pushButton_clicked()
+{
+	Angle angle;
+	int reflNum;
+	ReadTraceParams(angle, reflNum);
+	p_proxy.Trace(angle, reflNum);
+
+	SetTrackTree();
+	DrawBeamAnglePoints();
+}
+
+void MainWindow::SetChart()
+{
+	QPolarChart *chart = new QPolarChart();
+
+//	chart->setTitle("Use arrow keys to scroll, +/- to zoom, and space to switch chart type.");
+
+	QValueAxis *phiAxis = new QValueAxis();
+	phiAxis->setTickCount(9); // First and last ticks are co-located on 0/360 angle.
+	phiAxis->setLabelFormat("%.1f");
+	phiAxis->setShadesVisible(true);
+	phiAxis->setShadesBrush(QBrush(QColor(249, 249, 255)));
+	phiAxis->setReverse(true);
+	chart->addAxis(phiAxis, QPolarChart::PolarOrientationAngular);
+
+	QValueAxis *thetaAxis = new QValueAxis();
+	thetaAxis->setTickCount(7);
+	thetaAxis->setLabelFormat("%d");
+	chart->addAxis(thetaAxis, QPolarChart::PolarOrientationRadial);
+
+	thetaAxis->setRange(0, 180);
+	phiAxis->setRange(0, 360);
+
+	angleSeries = new QScatterSeries();
+	angleSeries->setMarkerShape(QScatterSeries::MarkerShapeCircle);
+	angleSeries->setMarkerSize(10);
+
+	chart->addSeries(angleSeries);
+	angleSeries->attachAxis(phiAxis);
+	angleSeries->attachAxis(thetaAxis);
+
+	chartView = new ChartView();
+	chartView->setChart(chart);
+//	chartView->setRenderHint(QPainter::Antialiasing);
+
+	ui->widget_chart->setLayout(new QGridLayout());
+	ui->widget_chart->layout()->addWidget(chartView);
 }
 
 void MainWindow::on_treeView_tracks_clicked(const QModelIndex &index)
 {
-	QVariant itemData = model->data(index, Qt::DisplayRole);
-	QVariant parentData = model->data(index.parent(), Qt::DisplayRole);
-
-	QString strData = itemData.toString();
-//	qDebug() << strData << parentData.toString();
-
-	if (strData.contains(':'))
+	if (model->hasChildren(index)) // is not root element
 	{
-		BeamInfo info = p_proxy.GetBeamInfo(parentData.toString(), strData);
-		ui->label_track->setText(info.track);
-		ui->label_area->setText(QString::number(info.area));
-		ui->label_optPath->setText(QString::number(info.beam.opticalPath));
+		return;
+	}
 
-		ui->label_m11->setText(QString::number(info.M.at(0)));
-		ui->label_m12->setText(QString::number(info.M.at(1)));
-		ui->label_m13->setText(QString::number(info.M.at(2)));
-		ui->label_m14->setText(QString::number(info.M.at(3)));
+	QModelIndex secondColIndex = model->index(index.row(), 1, index.parent());
+	QVariant itemData = model->data(secondColIndex, Qt::DisplayRole);
 
-		ui->label_m21->setText(QString::number(info.M.at(4)));
-		ui->label_m22->setText(QString::number(info.M.at(5)));
-		ui->label_m23->setText(QString::number(info.M.at(6)));
-		ui->label_m24->setText(QString::number(info.M.at(7)));
+	int beamNumber = itemData.toString().toInt();
 
-		ui->label_m31->setText(QString::number(info.M.at(8)));
-		ui->label_m32->setText(QString::number(info.M.at(9)));
-		ui->label_m33->setText(QString::number(info.M.at(10)));
-		ui->label_m34->setText(QString::number(info.M.at(11)));
+	BeamInfo info = p_proxy.GetBeamByNumber(beamNumber);
+	ui->label_track->setText(info.track);
+	ui->label_area->setText(QString::number(info.area));
+	ui->label_optPath->setText(QString::number(info.beam.opticalPath));
 
-		ui->label_m41->setText(QString::number(info.M.at(12)));
-		ui->label_m42->setText(QString::number(info.M.at(13)));
-		ui->label_m43->setText(QString::number(info.M.at(14)));
-		ui->label_m44->setText(QString::number(info.M.at(15)));
+	ui->label_m11->setText(QString::number(info.M.at(0)));
+	ui->label_m12->setText(QString::number(info.M.at(1)));
+	ui->label_m13->setText(QString::number(info.M.at(2)));
+	ui->label_m14->setText(QString::number(info.M.at(3)));
+
+	ui->label_m21->setText(QString::number(info.M.at(4)));
+	ui->label_m22->setText(QString::number(info.M.at(5)));
+	ui->label_m23->setText(QString::number(info.M.at(6)));
+	ui->label_m24->setText(QString::number(info.M.at(7)));
+
+	ui->label_m31->setText(QString::number(info.M.at(8)));
+	ui->label_m32->setText(QString::number(info.M.at(9)));
+	ui->label_m33->setText(QString::number(info.M.at(10)));
+	ui->label_m34->setText(QString::number(info.M.at(11)));
+
+	ui->label_m41->setText(QString::number(info.M.at(12)));
+	ui->label_m42->setText(QString::number(info.M.at(13)));
+	ui->label_m43->setText(QString::number(info.M.at(14)));
+	ui->label_m44->setText(QString::number(info.M.at(15)));
+}
+
+void MainWindow::on_lineEdit_search_textChanged(const QString &arg1)
+{
+	if (!arg1.isEmpty())
+	{
+		ui->lineEdit_search->setFont(QFont());
+
+		if (model != nullptr)
+		{
+			delete model;
+		}
+
+		QString tracks = p_proxy.GetBeamDataString(arg1);
+		model = new BeamItemModel(QStringList{"Phi, Theta", "Beam number"}, tracks);
+		ui->treeView_tracks->setModel(model);
+		ui->treeView_tracks->expandAll();
+	}
+	else
+	{
+		SetTrackTree();
+		ui->treeView_tracks->collapseAll();
 	}
 }

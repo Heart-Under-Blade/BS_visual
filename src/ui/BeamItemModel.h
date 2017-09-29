@@ -27,6 +27,7 @@ public:
 	bool insertColumns(int column, int count, const QModelIndex &parent) override;
 	bool removeRows(int row, int count, const QModelIndex &parent) override;
 	bool removeColumns(int column, int count, const QModelIndex &parent) override;
+	bool hasChildren(const QModelIndex &parent) const override;
 	Qt::ItemFlags flags(const QModelIndex &index) const override;
 
 	void setupModelData(const QStringList &lines, BeamItem *parent);
@@ -35,8 +36,6 @@ public:
 
 private:
 	BeamItem *rootItem;
-
-
 };
 
 #endif // BEAMITEMMODEL_H

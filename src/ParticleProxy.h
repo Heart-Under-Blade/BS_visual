@@ -17,7 +17,18 @@ struct BeamInfo
 	double area;
 	QString track;
 	QVector<double> M;
+	int number;
 };
+
+struct Angle
+{
+	double alpha;
+	double beta;
+	double gamma;
+};
+
+typedef QMap<QString, BeamInfo> BeamData;
+typedef QMap<QString, BeamData> TrackMap;
 
 class ParticleProxy
 {
@@ -27,14 +38,18 @@ public:
 
 	void SetParticle(const QString &type, double refrIndex, double height,
 					 double diameter, double additional = 1.0);
-	void Trace(double beta, double gamma, double alpha, int reflNum);
+	void Trace(const Angle &angle, int reflNum);
 	void Clear();
 
 	QStringList GetParticleTypes() const;
 	QString GetAdditionalParticleParam(const QString &type) const;
 
-	QString GetTracks();
-	BeamInfo &GetBeamInfo(const QString &trackKey, const QString &beamKey);
+	QString GetBeamDataString();
+	QString GetBeamDataString(const QString &searchLine);
+	BeamInfo &GetBeamByKeys(const QString &trackKey, const QString &beamKey);
+	BeamInfo &GetBeamByNumber(int number);
+
+	const TrackMap &GetTrackMap() const;
 
 private:
 
@@ -50,8 +65,7 @@ private:
 private:
 	QMap<PType, QString> particleTypes;
 
-	typedef QMap<QString, BeamInfo> BeamData;
-	QMap<QString, BeamData> beamData;
+	TrackMap beamData;
 
 	Particle *particle;
 	Tracing *tracing;
