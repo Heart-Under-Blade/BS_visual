@@ -6,7 +6,7 @@
 
 QT       += core gui charts
 TEMPLATE = app
-CONFIG += console c++11
+CONFIG += c++11
 
 DESTDIR = ../bin
 
