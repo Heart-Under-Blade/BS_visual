@@ -51,6 +51,8 @@ public:
 
 	const TrackMap &GetTrackMap() const;
 
+	Particle *GetParticle() const;
+
 private:
 
 	enum class PType : int

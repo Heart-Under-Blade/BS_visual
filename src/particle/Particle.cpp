@@ -105,9 +105,9 @@ void Particle::Output()
 		for (int j = 0; j < facets[i].size; ++j)
 		{
 			Point3f p = facets[i].arr[j];
-			M << p.point[0] << ' '
-							<< p.point[1] << ' '
-							<< p.point[2] << ' '
+			M << p._point[0] << ' '
+							<< p._point[1] << ' '
+							<< p._point[2] << ' '
 							<< i ;
 			M << std::endl;
 		}
@@ -196,9 +196,9 @@ void Particle::SetDParams()
 
 void Particle::RotatePoint(const Point3f &point, Point3f &result)
 {
-	result.cx = point.cx*m_rotMatrix[0][0] + point.cy*m_rotMatrix[0][1] + point.cz*m_rotMatrix[0][2];
-	result.cy = point.cx*m_rotMatrix[1][0] + point.cy*m_rotMatrix[1][1] + point.cz*m_rotMatrix[1][2];
-	result.cz = point.cx*m_rotMatrix[2][0] + point.cy*m_rotMatrix[2][1] + point.cz*m_rotMatrix[2][2];
+	result.c_x = point.c_x*m_rotMatrix[0][0] + point.c_y*m_rotMatrix[0][1] + point.c_z*m_rotMatrix[0][2];
+	result.c_y = point.c_x*m_rotMatrix[1][0] + point.c_y*m_rotMatrix[1][1] + point.c_z*m_rotMatrix[1][2];
+	result.c_z = point.c_x*m_rotMatrix[2][0] + point.c_y*m_rotMatrix[2][1] + point.c_z*m_rotMatrix[2][2];
 }
 
 void Particle::SetSymmetry(double beta, double gamma, double alpha)

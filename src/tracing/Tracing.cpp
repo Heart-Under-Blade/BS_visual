@@ -16,7 +16,7 @@ using namespace std;
 Tracing::Tracing(Particle *particle, const Point3f &incidentDir, bool isOpticalPath,
 				 const Point3f &polarizationBasis, int interReflectionNumber)
 {
-//	LOG_ASSERT(incidentDir.cx <= NORM_CEIL
+//	LOG_ASSERT(incidentDir.c_x <= NORM_CEIL
 //		   && incidentDir.cy <= NORM_CEIL
 //		   && incidentDir.cz <= NORM_CEIL
 //		   && "Direction of the start beam is not normalized.");
@@ -443,7 +443,7 @@ void Tracing::Difference(const Polygon &subject, const Point3f &subjNormal,
 		return;
 	}
 
-	__m128 _clip_normal = _mm_setr_ps(clipNormal.cx, clipNormal.cy, clipNormal.cz, 0.0);
+	__m128 _clip_normal = _mm_setr_ps(clipNormal.c_x, clipNormal.c_y, clipNormal.c_z, 0.0);
 
 	int clipSize = clip.size;
 	__m128 _diff_pol[MAX_VERTEX_NUM];
@@ -453,7 +453,7 @@ void Tracing::Difference(const Polygon &subject, const Point3f &subjNormal,
 
 	for (int i = 0; i < subject.size; ++i)
 	{
-		_subject[i] = _mm_load_ps(subject.arr[i].point);
+		_subject[i] = _mm_load_ps(subject.arr[i]._point);
 	}
 
 	__m128 *_subj = _buffer;
@@ -542,8 +542,8 @@ void Tracing::Difference(const Polygon &subject, const Point3f &subjNormal,
 bool Tracing::ProjectToFacetPlane(const Polygon &polygon, const Point3f &dir,
 								  const Point3f &normal, __m128 *_projection) const
 {
-	__m128 _normal = _mm_setr_ps(normal.cx, normal.cy, normal.cz, 0.0);
-	__m128 _direction = _mm_setr_ps(dir.cx, dir.cy, dir.cz, 0.0);
+	__m128 _normal = _mm_setr_ps(normal.c_x, normal.c_y, normal.c_z, 0.0);
+	__m128 _direction = _mm_setr_ps(dir.c_x, dir.c_y, dir.c_z, 0.0);
 
 	__m128 _d_param = _mm_set_ps1(normal.d_param);
 	__m128 _dp0 = _mm_dp_ps(_direction, _normal, MASK_FULL);
@@ -559,7 +559,7 @@ bool Tracing::ProjectToFacetPlane(const Polygon &polygon, const Point3f &dir,
 	for (int i = 0; i < polygon.size; ++i)
 	{
 		const Point3f &p = polygon.arr[i];
-		__m128 _point = _mm_setr_ps(p.cx, p.cy, p.cz, 0.0);
+		__m128 _point = _mm_setr_ps(p.c_x, p.c_y, p.c_z , 0.0);
 		__m128 _dp1 = _mm_dp_ps(_point, _normal, MASK_FULL);
 		__m128 _add = _mm_add_ps(_dp1, _d_param);
 		__m128 _t = _mm_div_ps(_add, _dp0);
@@ -584,7 +584,7 @@ bool Tracing::Intersect(int facetID, const Beam &beam, Polygon &intersection) co
 		return false;
 	}
 
-	__m128 _normal_to_facet = _mm_setr_ps(-normal.cx, -normal.cy, -normal.cz, 0.0);
+	__m128 _normal_to_facet = _mm_setr_ps(-normal.c_x, -normal.c_y, -normal.c_z, 0.0);
 	__m128 *_output_ptr = _output_points;
 	int outputSize = beam.size;
 
@@ -599,13 +599,13 @@ bool Tracing::Intersect(int facetID, const Beam &beam, Polygon &intersection) co
 	bool isInsideE, isInsideS;
 
 	Point3f p2 = m_particle->facets[facetID].arr[facetSize-1];
-	_p2 = _mm_load_ps(p2.point);
+	_p2 = _mm_load_ps(p2._point);
 
 	for (int i = 0; i < facetSize; ++i)
 	{
 		_p1 = _p2;
 		p2 = m_particle->facets[facetID].arr[i];
-		_p2 = _mm_load_ps(p2.point);
+		_p2 = _mm_load_ps(p2._point);
 
 		bufferSize = outputSize;
 		outputSize = 0;
@@ -677,9 +677,9 @@ void Tracing::SetOutputPolygon(__m128 *_output_points, int outputSize,
 
 		if (res != 0)
 		{
-			p.cx = _output_points[i][0];
-			p.cy = _output_points[i][1];
-			p.cz = _output_points[i][2];
+			p.c_x = _output_points[i][0];
+			p.c_y = _output_points[i][1];
+			p.c_z = _output_points[i][2];
 			polygon.arr[polygon.size++] = p;
 		}
 

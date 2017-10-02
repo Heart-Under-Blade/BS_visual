@@ -2,6 +2,8 @@
 #include "ui_MainWindow.h"
 
 #include "BeamItemModel.h"
+#include "ParticleProxy.h"
+//#include "ParticleView.h"
 
 #include <QDebug>
 #include <QtCharts/QAbstractAxis>
@@ -16,6 +18,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
 	model = nullptr;
 	precision = 4;
+	p_proxy = new ParticleProxy();
 
 	double h = 80, d = 40, ri = 1.31, b = 45, g = 30;
 	int ir = 3;
@@ -43,6 +46,20 @@ MainWindow::MainWindow(QWidget *parent) :
 	SetAdditionalParamName();
 
 	SetChart();
+
+	scene = new QGraphicsScene(this);
+	ui->graphicsView_particle->setScene(scene);
+
+	QObject::connect(ui->doubleSpinBox_alpha, SIGNAL(valueChanged(double)),
+					 this, SLOT(DrawParticle(double)));
+	QObject::connect(ui->doubleSpinBox_beta, SIGNAL(valueChanged(double)),
+					 this, SLOT(DrawParticle(double)));
+	QObject::connect(ui->doubleSpinBox_gamma, SIGNAL(valueChanged(double)),
+					 this, SLOT(DrawParticle(double)));
+
+	DrawParticle(0.0f);
+//	ParticleView pview;
+//	ui->groupBox_beam->layout()->addWidget(&pview);
 }
 
 MainWindow::~MainWindow()
@@ -57,11 +74,39 @@ MainWindow::~MainWindow()
 	state << h << ' ' << d << ' ' << ri << ' '
 		  << b << ' ' << g << ' ' << ir << ' ';
 	delete ui;
+	delete p_proxy;
+}
+
+void MainWindow::DrawParticle(double)
+{
+	scene->clear();
+	SetParticle();
+
+	Particle *particle = p_proxy->GetParticle();
+
+	Angle angle = GetRotateAngle();
+	particle->Rotate(DegToRad(angle.beta),
+					 DegToRad(angle.gamma),
+					 DegToRad(angle.alpha));
+
+	for (int i = 0; i < particle->facetNum; ++i)
+	{
+		Facet &facet = particle->facets[i];
+		QPolygonF pol;
+
+		for (int j = 0; j < facet.size; ++j)
+		{
+			Point3f &p = particle->facets[i].arr[j];
+			pol.append(QPointF(p.c_x, p.c_y));
+		}
+
+		scene->addPolygon(pol, QPen()/*, QBrush(Qt::red)*/);
+	}
 }
 
 void MainWindow::FillParticleTypes()
 {
-	QStringList types = p_proxy.GetParticleTypes();
+	QStringList types = p_proxy->GetParticleTypes();
 
 	foreach (const QString &type, types)
 	{
@@ -72,7 +117,7 @@ void MainWindow::FillParticleTypes()
 void MainWindow::SetAdditionalParamName()
 {
 	QString type = ui->comboBox_types->currentText();
-	QString paramName = p_proxy.GetAdditionalParticleParam(type);
+	QString paramName = p_proxy->GetAdditionalParticleParam(type);
 
 	if (!paramName.isEmpty())
 	{
@@ -93,8 +138,7 @@ void MainWindow::on_comboBox_types_currentIndexChanged(int index)
 void MainWindow::DrawBeamAnglePoints()
 {
 	angleSeries->clear();
-
-	TrackMap trackMap = p_proxy.GetTrackMap();
+	TrackMap trackMap = p_proxy->GetTrackMap();
 
 	foreach (QString tKey, trackMap.keys())
 	{
@@ -115,12 +159,12 @@ void MainWindow::SetTrackTree()
 		delete model;
 	}
 
-	QString tracks = p_proxy.GetBeamDataString();
+	QString tracks = p_proxy->GetBeamDataString();
 	model = new BeamItemModel(QStringList{"Phi, Theta", "Beam number"}, tracks);
 	ui->treeView_tracks->setModel(model);
 }
 
-void MainWindow::ReadTraceParams(Angle &angle, int &reflNum)
+void MainWindow::SetParticle()
 {
 	QString type = ui->comboBox_types->currentText();
 	double ri = ui->doubleSpinBox_refrIndex->value();
@@ -130,26 +174,31 @@ void MainWindow::ReadTraceParams(Angle &angle, int &reflNum)
 	if (ui->doubleSpinBox_additional->isVisible())
 	{
 		double add = ui->doubleSpinBox_additional->value();
-		p_proxy.SetParticle(type, ri, h, d, add);
+		p_proxy->SetParticle(type, ri, h, d, add);
 	}
 	else
 	{
-		p_proxy.SetParticle(type, ri, h, d);
+		p_proxy->SetParticle(type, ri, h, d);
 	}
+}
 
-	angle.alpha = ui->doubleSpinBox_alpha->value();
-	angle.beta = ui->doubleSpinBox_beta->value();
-	angle.gamma = ui->doubleSpinBox_gamma->value();
-
-	reflNum = ui->spinBox_inter->value();
+Angle MainWindow::GetRotateAngle()
+{
+	Angle a;
+	a.alpha = ui->doubleSpinBox_alpha->value();
+	a.beta = ui->doubleSpinBox_beta->value();
+	a.gamma = ui->doubleSpinBox_gamma->value();
+	return a;
 }
 
 void MainWindow::on_pushButton_clicked()
 {
-	Angle angle;
-	int reflNum;
-	ReadTraceParams(angle, reflNum);
-	p_proxy.Trace(angle, reflNum);
+	SetParticle();
+
+	Angle angle = GetRotateAngle();
+	int reflNum = ui->spinBox_inter->value();
+
+	p_proxy->Trace(angle, reflNum);
 
 	SetTrackTree();
 	DrawBeamAnglePoints();
@@ -205,7 +254,7 @@ void MainWindow::on_treeView_tracks_clicked(const QModelIndex &index)
 
 	int beamNumber = itemData.toString().toInt();
 
-	BeamInfo info = p_proxy.GetBeamByNumber(beamNumber);
+	BeamInfo info = p_proxy->GetBeamByNumber(beamNumber);
 	ui->label_track->setText(info.track);
 	ui->label_area->setText(QString::number(info.area, 'g', precision));
 	ui->label_optPath->setText(QString::number(info.beam.opticalPath, 'g', precision));
@@ -242,7 +291,7 @@ void MainWindow::on_lineEdit_search_textChanged(const QString &arg1)
 			delete model;
 		}
 
-		QString tracks = p_proxy.GetBeamDataString(arg1);
+		QString tracks = p_proxy->GetBeamDataString(arg1);
 		model = new BeamItemModel(QStringList{"Phi, Theta", "Beam number"}, tracks);
 		ui->treeView_tracks->setModel(model);
 		ui->treeView_tracks->expandAll();

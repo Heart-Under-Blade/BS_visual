@@ -20,9 +20,9 @@ std::ostream& operator << (std::ostream &os, const Beam &beam)
 	   << "id: " << beam.id << endl
 	   << "D: " << beam.D << endl
 	   << "direction: "
-	   << beam.direction.cx << ", "
-	   << beam.direction.cy << ", "
-	   << beam.direction.cz << ", "
+	   << beam.direction.c_x << ", "
+	   << beam.direction.c_y << ", "
+	   << beam.direction.c_z << ", "
 	   << beam.direction.d_param << endl << endl;
 
 	return os;
@@ -137,9 +137,9 @@ void Beam::RotateSpherical(const Point3f &dir, const Point3f &polarBasis)
 
 void Beam::GetSpherical(double &fi, double &teta) const
 {
-	const float &x = direction.cx;
-	const float &y = direction.cy;
-	const float &z = direction.cz;
+	const float &x = direction.c_x;
+	const float &y = direction.c_y;
+	const float &z = direction.c_z;
 
 	if (fabs(z + 1.0) < DBL_EPSILON) // forward
 	{
@@ -266,12 +266,12 @@ complex Beam::DiffractionIncline(const Point3d &pt, double wavelength) const
 		endIndex = size;
 	}
 
-	Point3d n = Point3d(_n.cx, _n.cy, _n.cz);
+	Point3d n = Point3d(_n.c_x, _n.c_y, _n.c_z);
 
-	Point3d k_k0 = -pt + Point3d(direction.cx, direction.cy, direction.cz);
+	Point3d k_k0 = pt + Point3d(direction.c_x, direction.c_y, direction.c_z);
 
 	Point3f cntr = Center();
-	Point3d center = Proj(n, Point3d(cntr.cx, cntr.cy, cntr.cz));
+	Point3d center = Proj(n, Point3d(cntr.c_x, cntr.c_y, cntr.c_z));
 
 	Point3d	pt_proj = Proj(n, k_k0);
 

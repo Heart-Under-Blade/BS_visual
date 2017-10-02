@@ -2,10 +2,10 @@
 
 bool inside(const Point3f &x, const Point3f &p1, const Point3f &p2, const Point3f &normal)
 {
-	__m128 _x = _mm_load_ps(x.point);
-	__m128 _p1 = _mm_load_ps(p1.point);
-	__m128 _p2 = _mm_load_ps(p2.point);
-	__m128 _n = _mm_load_ps(normal.point);
+	__m128 _x = _mm_load_ps(x._point);
+	__m128 _p1 = _mm_load_ps(p1._point);
+	__m128 _p2 = _mm_load_ps(p2._point);
+	__m128 _n = _mm_load_ps(normal._point);
 
 	__m128 eps = _mm_set_ss(EPS_INTERSECTION);
 	__m128 m_eps = _mm_set_ss(-EPS_INTERSECTION);
@@ -21,13 +21,13 @@ void computeIntersection(const Point3f &s, const Point3f &e,
 						 const Point3f &p1, const Point3f &p2,
 						 const Point3f &normal, Point3f &x)
 {
-	__m128 _a = _mm_load_ps(s.point);
-	__m128 _b = _mm_load_ps(e.point);
+	__m128 _a = _mm_load_ps(s._point);
+	__m128 _b = _mm_load_ps(e._point);
 
-	__m128 _p1 = _mm_load_ps(p1.point);
-	__m128 _p2 = _mm_load_ps(p2.point);
+	__m128 _p1 = _mm_load_ps(p1._point);
+	__m128 _p2 = _mm_load_ps(p2._point);
 
-	__m128 n = _mm_load_ps(normal.point);
+	__m128 n = _mm_load_ps(normal._point);
 
 	__m128 ab = _mm_sub_ps(_b, _a);
 	__m128 p12 = _mm_sub_ps(_p2, _p1);
@@ -51,7 +51,7 @@ void computeIntersection(const Point3f &s, const Point3f &e,
 	__m128 mul = _mm_mul_ps(t, ab);
 	__m128 p = _mm_sub_ps(_a, mul);
 
-	x.point[0] = p[0];
-	x.point[1] = p[1];
-	x.point[2] = p[2];
+	x._point[0] = p[0];
+	x._point[1] = p[1];
+	x._point[2] = p[2];
 }

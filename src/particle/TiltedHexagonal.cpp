@@ -96,7 +96,7 @@
 
 //		for (int i = startPointIndex; i <= endPointIndex; i += halfNumber)
 //		{
-//			facet[i].cx = x;
+//			facet[i].c_x = x;
 //			facet[i].cy = y;
 //			facet[i].cz = z;
 
@@ -115,8 +115,8 @@
 //	facet = m_originBases[1].arr;
 //	SetTwoDiagonalPoints(0, m_radius, 0, -m_halfHeight);
 //	SetTwoDiagonalPoints(1, halfRadius, -incircleRadius, -m_halfHeight);
-////	std::cout << "!!111" << facet[2].cx << std::endl // DEB
-////			  << facet[5].cx << std::endl;
+////	std::cout << "!!111" << facet[2].c_x << std::endl // DEB
+////			  << facet[5].c_x << std::endl;
 //	SetTwoDiagonalPoints(2,-halfRadius, -incircleRadius, -m_halfHeight);
 //}
 

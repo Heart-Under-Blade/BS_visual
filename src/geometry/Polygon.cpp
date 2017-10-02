@@ -73,9 +73,9 @@ std::ostream &operator <<(std::ostream &os, const Polygon &beam)
 	for (int i = 0; i < beam.size; ++i)
 	{
 		os << "\t" << i << ": "
-		   << beam.arr[i].cx << ", "
-		   << beam.arr[i].cy << ", "
-		   << beam.arr[i].cz << ", "
+		   << beam.arr[i].c_x << ", "
+		   << beam.arr[i].c_y << ", "
+		   << beam.arr[i].c_z << ", "
 		   << beam.arr[i].d_param << endl;
 	}
 
@@ -132,7 +132,7 @@ Point3f Polygon::Normal() const
 		Normalize(normal);
 		++count;
 	}
-	while (isnan(normal.cx) && count < size);
+	while (isnan(normal.c_x) && count < size);
 
 	return normal;
 }

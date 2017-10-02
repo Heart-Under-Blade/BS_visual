@@ -347,9 +347,9 @@ void CertainAggregate::Resize(double sizeIndex)
 	{
 		for (int j = 0; j < defaultFacets[i].size; ++j)
 		{
-			defaultFacets[i].arr[j].cx *= sizeIndex;
-			defaultFacets[i].arr[j].cy *= sizeIndex;
-			defaultFacets[i].arr[j].cz *= sizeIndex;
+			defaultFacets[i].arr[j].c_x *= sizeIndex;
+			defaultFacets[i].arr[j].c_y *= sizeIndex;
+			defaultFacets[i].arr[j].c_z *= sizeIndex;
 		}
 	}
 }

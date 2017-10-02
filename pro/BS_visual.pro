@@ -4,11 +4,13 @@
 #
 #-------------------------------------------------
 
-QT       += core gui charts
+QT       += core gui charts datavisualization opengl
 TEMPLATE = app
 CONFIG += c++11
 
 DESTDIR = ../bin
+
+LIBS += -lglu32 -lopengl32
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
@@ -63,3 +65,6 @@ HEADERS += \
 
 FORMS += \
 		../src/ui/*.ui \
+
+RESOURCES += \
+    shaders.qrc

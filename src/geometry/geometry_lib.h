@@ -42,10 +42,10 @@ struct Couple
 };
 
 // short access for Point3f
-#define cx		point[0]
-#define cy		point[1]
-#define cz		point[2]
-#define d_param point[3]
+#define c_x		_point[0]
+#define c_y		_point[1]
+#define c_z		_point[2]
+#define d_param _point[3]
 
 // short access for normals of Facet
 #define in_normal normal[0]
@@ -57,79 +57,79 @@ struct Couple
  */
 struct Point3f
 {
-	float point[4]; /// coordinates
+	float _point[4]; /// coordinates
 
 	Point3f() {}
 
 	Point3f(float x, float y, float z)
 	{
-		point[0] = x;
-		point[1] = y;
-		point[2] = z;
+		_point[0] = x;
+		_point[1] = y;
+		_point[2] = z;
 	}
 
 	Point3f(float x, float y, float z, float d)
 	{
-		point[0] = x;
-		point[1] = y;
-		point[2] = z;
-		point[3] = d;
+		_point[0] = x;
+		_point[1] = y;
+		_point[2] = z;
+		_point[3] = d;
 	}
 
 	Point3f(const Point3f &other)
 	{
-		point[0] = other.point[0];
-		point[1] = other.point[1];
-		point[2] = other.point[2];
+		_point[0] = other._point[0];
+		_point[1] = other._point[1];
+		_point[2] = other._point[2];
 	}
 
 	Point3f & operator = (const Point3f &other)
 	{
-		point[0] = other.point[0];
-		point[1] = other.point[1];
-		point[2] = other.point[2];
+		_point[0] = other._point[0];
+		_point[1] = other._point[1];
+		_point[2] = other._point[2];
 
 		return *this;
 	}
 
 	Point3f operator * (double value) const
 	{
-		return Point3f(point[0] * value,
-				point[1] * value,
-				point[2] * value);
+		return Point3f(_point[0] * value,
+				_point[1] * value,
+				_point[2] * value);
 	}
 
 	Point3f operator / (double value) const
 	{
-		return Point3f(point[0] / value,
-				point[1] / value,
-				point[2] / value);
+		return Point3f(_point[0] / value,
+				_point[1] / value,
+				_point[2] / value);
 	}
 
 	Point3f operator - (const Point3f &value) const
 	{
-		return Point3f(point[0] - value.point[0],
-				point[1] - value.point[1],
-				point[2] - value.point[2]);
+		return Point3f(_point[0] - value._point[0],
+				_point[1] - value._point[1],
+				_point[2] - value._point[2]);
 	}
 
 	Point3f operator + (const Point3f &value) const
 	{
-		return Point3f(point[0] + value.point[0],
-				point[1] + value.point[1],
-				point[2] + value.point[2]);
+		return Point3f(_point[0] + value._point[0],
+				_point[1] + value._point[1],
+				_point[2] + value._point[2]);
 	}
 
 	Point3f operator += (double value)
 	{
-		return *this = Point3f(point[0] + value,
-				point[1] + value,
-				point[2] + value);
+		return *this = Point3f(_point[0] + value,
+				_point[1] + value,
+				_point[2] + value);
 	}
 
 	Point3f operator - () const
 	{
-		return Point3f(-point[0], -point[1], -point[2], -point[3]);
+		return Point3f(-_point[0], -_point[1], -_point[2], -_point[3]);
 	}
 
 } __attribute__ ((aligned (16)));
@@ -145,9 +145,9 @@ struct Point3d
 
 	Point3d(const Point3f &other)
 	{
-		x = other.cx;
-		y = other.cy;
-		z = other.cz;
+		x = other.c_x;
+		y = other.c_y;
+		z = other.c_z;
 		d = other.d_param;
 	}
 

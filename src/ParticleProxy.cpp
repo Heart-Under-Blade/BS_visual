@@ -111,8 +111,8 @@ void ParticleProxy::SetParticle(const QString &type, double refrIndex,
 
 void RotateMuller(const Point3f &dir, matrix &M)
 {
-	const float &x = dir.cx;
-	const float &y = dir.cy;
+	const float &x = dir.c_x;
+	const float &y = dir.c_y;
 
 	double tmp = y*y;
 
@@ -174,11 +174,11 @@ void ParticleProxy::Trace(const Angle &angle, int reflNum)
 		double phi, theta;
 		beam.GetSpherical(phi, theta);
 
-		const float &z = beam.direction.cz;
+		const float &z = beam.direction.c_z;
 
 		if (z >= 1-DBL_EPSILON && z <= DBL_EPSILON-1)
 		{
-			const float &y = beam.direction.cy;
+			const float &y = beam.direction.c_y;
 
 			if (y*y > DBL_EPSILON)
 			{	// rotate the Mueller matrix of the beam to appropriate coordinate system
@@ -311,4 +311,9 @@ BeamInfo &ParticleProxy::GetBeamByNumber(int number)
 const TrackMap &ParticleProxy::GetTrackMap() const
 {
 	return beamData;
+}
+
+Particle *ParticleProxy::GetParticle() const
+{
+	return particle;
 }

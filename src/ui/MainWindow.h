@@ -4,10 +4,10 @@
 #include <QtCharts/QScatterSeries>
 #include <QChartView>
 
-#include "ParticleProxy.h"
-
 QT_CHARTS_USE_NAMESPACE
 
+class Angle;
+class ParticleProxy;
 class BeamItemModel;
 
 namespace Ui {
@@ -26,15 +26,17 @@ private slots:
 	void on_comboBox_types_currentIndexChanged(int index);
 	void on_pushButton_clicked();
 	void on_treeView_tracks_clicked(const QModelIndex &index);
-
 	void on_lineEdit_search_textChanged(const QString &arg1);
+
+	void DrawParticle(double);
 
 private:
 	Ui::MainWindow *ui;
-	ParticleProxy p_proxy;
+	ParticleProxy *p_proxy;
 	BeamItemModel *model;
 	QChartView *chartView;
 	QScatterSeries *angleSeries;
+	QGraphicsScene *scene;
 	int precision;
 
 private:
@@ -43,5 +45,6 @@ private:
 	void SetChart();
 	void DrawBeamAnglePoints();
 	void SetTrackTree();
-	void ReadTraceParams(Angle &angle, int &reflNum);
+	Angle GetRotateAngle();
+	void SetParticle();
 };
