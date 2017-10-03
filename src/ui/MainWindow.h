@@ -47,4 +47,5 @@ private:
 	void SetTrackTree();
 	Angle GetRotateAngle();
 	void SetParticle();
+	void DrawAxes(double size);
 };

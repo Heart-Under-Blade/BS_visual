@@ -49,6 +49,8 @@ MainWindow::MainWindow(QWidget *parent) :
 
 	scene = new QGraphicsScene(this);
 	ui->graphicsView_particle->setScene(scene);
+	ui->graphicsView_particle->setRenderHints(QPainter::Antialiasing
+											  | QPainter::SmoothPixmapTransform);
 
 	QObject::connect(ui->doubleSpinBox_alpha, SIGNAL(valueChanged(double)),
 					 this, SLOT(DrawParticle(double)));
@@ -102,6 +104,37 @@ void MainWindow::DrawParticle(double)
 
 		scene->addPolygon(pol, QPen()/*, QBrush(Qt::red)*/);
 	}
+
+	double size = particle->GetMainSize();
+	DrawAxes(size);
+}
+
+void MainWindow::DrawAxes(double size)
+{
+	double arrowSize = size/10;
+
+	QPen redPen(Qt::red);
+	QBrush redBrush(Qt::red);
+
+	scene->addLine(0, 0, size, 0, redPen);
+	QPolygonF arrowX;
+	arrowX << QPointF(size, 0) << QPointF(size-arrowSize, arrowSize/4)
+		   << QPointF(size-arrowSize, -arrowSize/4) << QPointF(size, 0);
+	scene->addPolygon(arrowX, redPen, redBrush);
+	QGraphicsItem *textX = scene->addText("X");
+	textX->moveBy(size, -arrowSize);
+
+	scene->addLine(0, 0, 0, size, redPen);
+	QPolygonF arrowY;
+	arrowY << QPointF(0, size) << QPointF(arrowSize/4, size-arrowSize)
+		   << QPointF(-arrowSize/4, size-arrowSize) << QPointF(0, size);
+	scene->addPolygon(arrowY, redPen, redBrush);
+	QGraphicsItem *textY = scene->addText("Y");
+	textY->moveBy(-arrowSize/2, size);
+
+	// pseudo axis 'Z'
+	scene->addEllipse(-arrowSize/2, -arrowSize/2, arrowSize, arrowSize, redPen);
+	/*QGraphicsItem *textZ = */scene->addText("Z");
 }
 
 void MainWindow::FillParticleTypes()
