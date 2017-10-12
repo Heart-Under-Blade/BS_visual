@@ -168,10 +168,10 @@ void MainWindow::DrawParticle(double)
 
 	Angle rotAngle = GetRotateAngle();
 	Angle viewAngle = GetViewAngle();
-	QVector<QPointF> axes = p_proxy->Rotate(rotAngle, viewAngle);
+	QPolygonF axes = p_proxy->Rotate(rotAngle, viewAngle);
 
 	QVector<NumberedFacet> facets;
-	p_proxy->GetFacets(facets);
+	p_proxy->GetVisibleFacets(facets);
 
 //	QPen dashPen;
 //	dashPen.setStyle(Qt::DashLine);
@@ -193,10 +193,20 @@ void MainWindow::DrawParticle(double)
 
 void MainWindow::DrawAxis(const QPointF &axis, const QString &letter)
 {
+	double x = axis.x();
+	double y = axis.y();
+
 	QPen redPen(Qt::red);
-	scene->addLine(0, 0, axis.x(), axis.y(), redPen);
-	QGraphicsItem *textX = scene->addText(letter);
-	textX->moveBy(axis.x(), axis.y());
+	scene->addLine(0, 0, x, y, redPen);
+
+	QGraphicsItem *text = scene->addText(letter);
+	text->moveBy(x, y);
+
+	double len = sqrt(x*x + y*y);
+	double arrowSize = len/15;
+
+	QPolygonF arrow;
+	arrow << QPointF(x, y) << QPointF(x-arrowSize, y-arrowSize);
 }
 
 void MainWindow::DrawAxes(const QVector<QPointF> &axes)
@@ -314,7 +324,7 @@ Angle MainWindow::GetRotateAngle()
 Angle MainWindow::GetViewAngle()
 {
 	Angle a;
-	a.alpha = DegToRad(ui->doubleSpinBox_view_alpha->value());
+	a.alpha = DegToRad(ui->doubleSpinBox_view_alpha->value() + coordinateOffset);
 	a.beta = DegToRad(ui->doubleSpinBox_view_beta->value());
 	a.gamma = DegToRad(ui->doubleSpinBox_view_gamma->value());
 	return a;

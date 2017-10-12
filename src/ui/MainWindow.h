@@ -43,6 +43,7 @@ private:
 	int precision;
 	QMap<QString, QVariant> state;
 	bool hasAdditional;
+	double coordinateOffset = 90;
 
 private:
 	void FillParticleTypes();

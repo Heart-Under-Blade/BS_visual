@@ -112,6 +112,8 @@ void ParticleProxy::SetParticle(const QString &type, double refrIndex,
 		ptype = PType::Aggregate;
 		particle = new CertainAggregate(refrIndex, additional);
 	}
+
+	particle->Rotate(0, DegToRad(90), 0);
 }
 
 void RotateMuller(const Point3f &dir, matrix &M)
@@ -224,7 +226,17 @@ void ParticleProxy::Trace(const Angle &angle, int reflNum)
 	}
 }
 
-QVector<QPointF> ParticleProxy::Rotate(const Angle &rotAngle, const Angle &viewAngle)
+void ParticleProxy::TranslateCoordinates(QPolygonF &pol)
+{
+	for (int i = 0; i < pol.size(); ++i)
+	{
+//		pol[i] = -pol[i];
+		pol[i].setX(pol[i].x());
+		pol[i].setY(-pol[i].y());
+	}
+}
+
+QPolygonF ParticleProxy::Rotate(const Angle &rotAngle, const Angle &viewAngle)
 {
 	particle->Rotate(rotAngle.beta + viewAngle.beta,
 					 rotAngle.gamma + viewAngle.gamma,
@@ -239,10 +251,12 @@ QVector<QPointF> ParticleProxy::Rotate(const Angle &rotAngle, const Angle &viewA
 	resAxes[1] = resAxes[1] * size;
 	resAxes[2] = resAxes[2] * size;
 
-	QVector<QPointF> res;
+	QPolygonF res;
 	res.append(QPointF{resAxes.at(0).c_x, resAxes.at(0).c_y});
 	res.append(QPointF{resAxes.at(1).c_x, resAxes.at(1).c_y});
 	res.append(QPointF{resAxes.at(2).c_x, resAxes.at(2).c_y});
+
+	TranslateCoordinates(res);
 	return res;
 }
 
@@ -349,7 +363,7 @@ void ParticleProxy::GetBeamByNumber(int number, BeamInfo &binfo)
 	}
 }
 
-void ParticleProxy::GetFacets(QVector<NumberedFacet> &facets)
+void ParticleProxy::GetVisibleFacets(QVector<NumberedFacet> &facets)
 {
 	Point3f incidentDir(0, 0, -1);
 	Point3f polarizationBasis(0, 1, 0);
@@ -382,6 +396,7 @@ void ParticleProxy::GetFacets(QVector<NumberedFacet> &facets)
 			pol.append(QPointF(p.c_x, p.c_y));
 		}
 
+		TranslateCoordinates(pol);
 		facets.append(NumberedFacet{pol, id});
 	}
 

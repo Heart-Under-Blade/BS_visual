@@ -72,7 +72,7 @@ public:
 	void Trace(const Angle &angle, int reflNum);
 	void Clear();
 
-	QVector<QPointF> Rotate(const Angle &rotAngle, const Angle &viewAngle);
+	QPolygonF Rotate(const Angle &rotAngle, const Angle &viewAngle);
 
 	QStringList GetParticleTypes() const;
 	QString GetAdditionalParticleParam(const QString &type) const;
@@ -85,7 +85,7 @@ public:
 	const TrackMap &GetTrackMap() const;
 
 	Particle *GetParticle() const;
-	void GetFacets(QVector<NumberedFacet> &facets);
+	void GetVisibleFacets(QVector<NumberedFacet> &facets);
 
 	void SetTracing(const Point3f &incidentDir, int reflNum,
 					const Point3f &polarizationBasis);
@@ -114,4 +114,5 @@ private:
 
 private:
 	QPolygonF Union(QVector<QPolygonF> polygons, double epsilon);
+	void TranslateCoordinates(QPolygonF &pol);
 };
