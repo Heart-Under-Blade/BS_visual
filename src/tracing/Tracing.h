@@ -64,13 +64,23 @@ public:
 	virtual void SplitBeamByParticle(double /*beta*/, double /*gamma*/, std::vector<Beam> &/*scaterredBeams*/, double /*alpha*/ = 0.0) {}
 	virtual void SplitBeamByParticle(double beta, double gamma, const std::vector<std::vector<int>> &tracks,
 									 std::vector<Beam> &scaterredBeams);
+	virtual void GetVisiblePart(double /*b*/, double /*g*/, double /*a*/,
+								std::vector<Beam> &/*beams*/) {}
 
+	void SortFacets(const Point3f &beamDir, IntArray &facetIds); ///< use 'Fast sort' algorithm
+	void SortFacets_2(const Point3f &beamDir, Location location, IntArray &facetIds);
+
+	void FindVisibleFacetsForWavefront(IntArray &facetIDs);
+	void SelectVisibleFacetsForWavefront(IntArray &facetIDs);
 	double GetIncomingEnergy() const;
 
 //	double CrossSection(const Point3f &beamDir) const;
 
 protected:
+	double CalcMinDistanceToFacet(const Polygon &polygon, const Point3f &beamDir);
 	void SetBeamOpticalParams(int facetId, Beam &inBeam, Beam &outBeam);
+	void ProjectPointToFacet(const Point3f &point, const Point3f &direction,
+							 const Point3f &facetNormal, Point3f &projection);
 
 	void SetBeam(Beam &beam, const Beam &other, const Point3f &dir, const Point3f &e,
 				 const complex &coef1, const complex &coef2) const;
@@ -88,7 +98,7 @@ protected:
 
 	bool IsTerminalBeam(const Beam &beam);
 
-	void TraceFirstBeam(int facetId, Beam &inBeam, Beam &outBeam);
+	void TraceFirstBeam(std::vector<Beam> &outBeams);
 
 	void TraceSecondaryBeams(Beam &incidentBeam, int facetID,
 								  Beam &inBeam, std::vector<Beam> &outBeams);

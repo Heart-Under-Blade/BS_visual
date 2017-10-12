@@ -292,7 +292,7 @@
      </widget>
     </item>
     <item row="0" column="0">
-     <widget class="QGroupBox" name="groupBox">
+     <widget class="QGroupBox" name="groupBox_input">
       <property name="sizePolicy">
        <sizepolicy hsizetype="Minimum" vsizetype="Expanding">
         <horstretch>0</horstretch>
@@ -418,6 +418,9 @@
               <property name="decimals">
                <number>5</number>
               </property>
+              <property name="minimum">
+               <double>-360.000000000000000</double>
+              </property>
               <property name="maximum">
                <double>360.000000000000000</double>
               </property>
@@ -438,6 +441,9 @@
               <property name="decimals">
                <number>5</number>
               </property>
+              <property name="minimum">
+               <double>-360.000000000000000</double>
+              </property>
               <property name="maximum">
                <double>360.000000000000000</double>
               </property>
@@ -457,6 +463,9 @@
               </property>
               <property name="decimals">
                <number>5</number>
+              </property>
+              <property name="minimum">
+               <double>-360.000000000000000</double>
               </property>
               <property name="maximum">
                <double>360.000000000000000</double>
@@ -481,6 +490,9 @@
           <widget class="QDoubleSpinBox" name="doubleSpinBox_refrIndex">
            <property name="decimals">
             <number>5</number>
+           </property>
+           <property name="singleStep">
+            <double>0.000100000000000</double>
            </property>
           </widget>
          </item>
@@ -508,9 +520,6 @@
           <string>Launch the Beam</string>
          </property>
         </widget>
-       </item>
-       <item>
-        <widget class="QGraphicsView" name="graphicsView_particle"/>
        </item>
       </layout>
      </widget>

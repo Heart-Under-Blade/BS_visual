@@ -14,26 +14,19 @@ public:
 							 double alpha = 0.0) override;
 	void SplitBeamByParticle(double beta, double gamma, const std::vector<std::vector<int>> &tracks,
 							 std::vector<Beam> &scaterredBeams) override;
+
 private:
 	void CutBeamByFacet(int facetID, Beam &beam, bool &isDivided,
 						Polygon *resultBeams, int &resultSize);
 
-	double CalcMinDistanceToFacet(const Polygon &polygon, const Point3f &beamDir);
-	void SortFacets(const Point3f &beamDir, IntArray &facetIds); ///< use 'Fast sort' algorithm
-
 	void CutFacetByShadows(int facetID, const IntArray &shadowFacetIDs, int prevFacetNum,
 						   PolygonArray &resFacets);
-
-	void ProjectPointToFacet(const Point3f &point, const Point3f &direction,
-							 const Point3f &facetNormal, Point3f &projection);
 
 	void CatchExternalBeam(const Beam &beam, std::vector<Beam> &scatteredBeams);
 
 	void FindVisibleFacets(const Beam &beam, IntArray &facetIds);
-	void FindVisibleFacetsForWavefront(IntArray &facetIDs);
 
 	void SelectVisibleFacets(const Beam &beam, IntArray &facetIDs);
-	void SelectVisibleFacetsForWavefront(IntArray &facetIDs);
 
 	void SetOpticalBeamParams(int facetID, const Beam &incidentBeam,
 							  Beam &inBeam, Beam &outBeam, bool &hasOutBeam);
@@ -68,5 +61,10 @@ private:
 
 protected:
 	void TraceSecondaryBeams(std::vector<Beam> &scaterredBeams);
+
+	// Tracing interface
+public:
+	void GetVisiblePart(double b, double g, double a,
+						std::vector<Beam> &beams) override;
 };
 

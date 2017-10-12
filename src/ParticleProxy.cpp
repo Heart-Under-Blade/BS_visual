@@ -17,6 +17,11 @@
 #include <iostream>
 using namespace std;
 
+#ifdef _DEBUG
+using namespace std;
+ofstream debfile("deb.dat", ios::out);
+#endif
+
 ParticleProxy::ParticleProxy()
 {
 	particle = nullptr;
@@ -42,14 +47,14 @@ ParticleProxy::~ParticleProxy()
 	}
 }
 
-QString RecoverTrack(const Beam &beam, int facetNum)
+QString ParticleProxy::RecoverTrack(long long id, int level)
 {
 	QString track;
-	int coef = facetNum + 1;
+	int coef = particle->facetNum + 1;
 	std::vector<int> tmp_track;
 
-	int tmpId = beam.id/coef;
-	for (int i = 0; i <= beam.level; ++i)
+	int tmpId = id/coef;
+	for (int i = 0; i <= level; ++i)
 	{
 		int tmp = tmpId%coef;
 		tmpId -= tmp;
@@ -127,12 +132,9 @@ void RotateMuller(const Point3f &dir, matrix &M)
 	RightRotateMueller(M, cos(tmp), sin(tmp));
 }
 
-void ParticleProxy::Trace(const Angle &angle, int reflNum)
+void ParticleProxy::SetTracing(const Point3f &incidentDir, int reflNum,
+							   const Point3f &polarizationBasis)
 {
-	beamData.clear();
-
-	Point3f incidentDir(0, 0, -1);
-	Point3f polarizationBasis(0, 1, 0);
 	bool isOpticalPath = true;
 
 	if (tracing != nullptr)
@@ -152,6 +154,16 @@ void ParticleProxy::Trace(const Angle &angle, int reflNum)
 		tracing = new TracingConvex(particle, incidentDir, isOpticalPath,
 									polarizationBasis, reflNum);
 	}
+}
+
+void ParticleProxy::Trace(const Angle &angle, int reflNum)
+{
+	beamData.clear();
+
+	Point3f incidentDir(0, 0, -1);
+	Point3f polarizationBasis(0, 1, 0);
+
+	SetTracing(incidentDir, reflNum, polarizationBasis);
 
 	vector<Beam> outBeams;
 	double betaR = DegToRad(angle.beta);
@@ -188,7 +200,7 @@ void ParticleProxy::Trace(const Angle &angle, int reflNum)
 
 		info.thetaDeg = 180 - RadToDeg(theta);
 		info.phiDeg = RadToDeg(phi);
-		info.track = RecoverTrack(beam, particle->facetNum)+":";
+		info.track = RecoverTrack(beam.id, beam.level)+":";
 		info.number = ++count;
 
 		QString dir = QString("%1, %2").arg(info.phiDeg).arg(info.thetaDeg);
@@ -201,7 +213,7 @@ void ParticleProxy::Trace(const Angle &angle, int reflNum)
 		if (beamData.contains(dir))
 		{
 			auto it = beamData.find(dir);
-			(*it).insert(info.track, info);
+			(*it).insertMulti(info.track, info);
 		}
 		else
 		{
@@ -211,7 +223,7 @@ void ParticleProxy::Trace(const Angle &angle, int reflNum)
 		}
 //		contr.scatMatrix.insert(0, thetaDeg, area*M);
 	}
-	//	int b =0;
+		int b =0;
 }
 
 QStringList ParticleProxy::GetParticleTypes() const
@@ -244,10 +256,14 @@ QString ParticleProxy::GetBeamDataString()
 		BeamData data = beamData.value(key);
 		res += key+"\t"+QString::number(data.size())+"\n";
 
-		foreach (QString dkey, data.keys())
+		foreach (QString dkey, data.uniqueKeys())
 		{
-			BeamInfo info = data.value(dkey);
-			res += " "+dkey+"\t"+QString::number(info.number)+"\n";
+			auto infos = data.values(dkey);
+
+			foreach (BeamInfo info, infos)
+			{
+				res += " "+dkey+"\t"+QString::number(info.number)+"\n";
+			}
 		}
 	}
 
@@ -264,12 +280,16 @@ QString ParticleProxy::GetBeamDataString(const QString &searchLine)
 
 		QStringList children;
 
-		foreach (QString dkey, data.keys())
+		foreach (QString dkey, data.uniqueKeys())
 		{
 			if (dkey.startsWith(searchLine))
 			{
-				BeamInfo info = data.value(dkey);
-				children += " "+dkey+"\t"+QString::number(info.number)+"\n";
+				auto infos = data.values(dkey);
+
+				foreach (BeamInfo info, infos)
+				{
+					children += " "+dkey+"\t"+QString::number(info.number)+"\n";
+				}
 			}
 		}
 
@@ -288,24 +308,197 @@ BeamInfo &ParticleProxy::GetBeamByKeys(const QString &trackKey, const QString &b
 	return beamData[trackKey][beamKey];
 }
 
-BeamInfo &ParticleProxy::GetBeamByNumber(int number)
+void ParticleProxy::GetBeamByNumber(int number, BeamInfo &binfo)
 {
 	foreach (QString key, beamData.keys())
 	{
 		BeamData data = beamData.value(key);
 
-		foreach (QString dkey, data.keys())
+		foreach (QString dkey, data.uniqueKeys())
 		{
-			BeamInfo info = data.value(dkey);
+			auto infos = data.values(dkey);
 
-			if (info.number == number)
+			foreach (BeamInfo info, infos)
 			{
-				return data[dkey];
+				if (info.number == number)
+				{
+					binfo = info;
+				}
+			}
+		}
+	}
+}
+
+void ParticleProxy::GetFacets(QVector<NumberedFacet> &facets)
+{
+	Point3f incidentDir(0, 0, -1);
+	Point3f polarizationBasis(0, 1, 0);
+
+	SetTracing(incidentDir, 0, polarizationBasis);
+
+	IntArray facetIDs;
+
+//	for (int i = 0; i < particle->facetNum; ++i)
+//	{
+//		facetIDs.Add(i);
+//	}
+
+	tracing->SelectVisibleFacetsForWavefront(facetIDs);
+//	tracing->FindVisibleFacetsForWavefront(facetIDs);
+
+//	for (int i = facetIDs.size-1; i >= 0; --i)
+	for (int i = 0; i < facetIDs.size; ++i)
+	{
+		int id = facetIDs.arr[i];
+#ifdef _DEBUG // DEB
+//		std::cout << id << " ";
+#endif
+		Facet &facet = particle->facets[id];
+		QPolygonF pol;
+
+		for (int j = 0; j < facet.size; ++j)
+		{
+			Point3f &p = facet.arr[j];
+			pol.append(QPointF(p.c_x, p.c_y));
+		}
+
+		facets.append(NumberedFacet{pol, id});
+	}
+
+//	vector<Beam> outBeams;
+//	tracing->GetVisiblePart(betaR, gammaR, alphaR, outBeams);
+
+//	QMap<long long, QPolygonF> beams;
+
+//	foreach (Beam b, outBeams)
+//	{
+//		QPolygonF pol;
+
+//		for (int i = 0; i < b.size; ++i)
+//		{
+//			Point3f &p = b.arr[i];
+//			pol.append(QPointF(p.c_x, p.c_y));
+//		}
+
+//		beams.insertMulti(b.id, pol);
+//	}
+
+//	foreach (long long key, beams.uniqueKeys())
+//	{
+//#ifdef _DEBUG // DEB
+//		if (RecoverTrack(key, 0) == "12") {
+//			int f = 0;
+//#endif
+//		auto pols = beams.values(key);
+//		QPolygonF resPol = Union(pols.toVector(), (double)EPS_MERGE);
+//		visibleParts.append(resPol);
+//		}
+//	}
+}
+
+// BUG: не всегда правильно объединяет, пофиксить
+QPolygonF ParticleProxy::Union(QVector<QPolygonF> polygons, double epsilon)
+{
+	QVector<QPair<int, int>> connectPoints;
+
+	QPolygonF resPol = polygons[0];
+
+	for (int i = 1; i < polygons.size(); ++i)
+	{
+		QPolygonF &pol = polygons[i];
+		bool isFound = false;
+
+		for (int j = 0; j < resPol.size(); ++j)
+		{
+			for (int k = 0; (k < polygons[i].size()) && !isFound; ++k)
+			{
+				QPointF dif = resPol[j] - pol[k];
+				double length = sqrt(QPointF::dotProduct(dif, dif));
+
+				if (length < epsilon)
+				{
+					connectPoints.append(QPair<int, int>(j, k));
+
+					if (connectPoints.size() == 2)
+					{
+						isFound = true;
+					}
+				}
+			}
+
+			if (isFound) // union
+			{
+				bool isNear = (connectPoints[1].first - connectPoints[0].first == 1);
+				int first = isNear ? 0 : 1;
+				int last = isNear ? 1 : 0;
+
+				auto pFirst = connectPoints[first];
+				auto pLast = connectPoints[last];
+
+				int resFirst = connectPoints[first].first;
+				resPol.remove(resFirst);
+
+				// determine order
+				int dir = (pLast.second - pFirst.second == 1) ? -1 : 1;
+
+				for (int l = pFirst.second; l != pLast.second; l += 1*dir)
+				{
+					if (l == pol.size())
+					{
+						l = -1;
+						continue;
+					}
+					else if (l == -1)
+					{
+						l = pol.size();
+						continue;
+					}
+
+					resPol.insert(resFirst++, pol[l]);
+				}
+
+				polygons.remove(i); // current polygon is already united with result polygon
+				i = 0;
+				connectPoints.clear();
+				break;
 			}
 		}
 	}
 
-	return beamData.first().first();
+	// remove duplicates
+	std::vector<int> remList;
+
+	int i = 1;
+	int j = resPol.size()-1;
+
+	while (j != -1)
+	{
+		if (i == resPol.size())
+		{
+			i = 0;
+			j = resPol.size()-2;
+		}
+
+		QPointF dif = resPol[i] - resPol[j];
+		double length = sqrt(QPointF::dotProduct(dif, dif));
+
+		if (length < epsilon)
+		{
+			remList.push_back(i);
+		}
+
+		j = i-1;
+		++i;
+	}
+
+	std::sort(remList.begin(), remList.end());
+
+	for (int k = remList.size()-1; k >= 0; --k)
+	{
+		resPol.remove(k);
+	}
+
+	return resPol;
 }
 
 const TrackMap &ParticleProxy::GetTrackMap() const

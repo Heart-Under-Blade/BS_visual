@@ -2,6 +2,7 @@
 
 #include <QMap>
 #include <QVector>
+#include <QPolygonF>
 #include <QString>
 #include <QStringList>
 #include "Beam.h"
@@ -11,6 +12,8 @@ class Tracing;
 
 struct BeamInfo
 {
+	BeamInfo() {}
+
 	Beam beam;
 	double thetaDeg;
 	double phiDeg;
@@ -22,9 +25,16 @@ struct BeamInfo
 
 struct Angle
 {
+	Angle() {alpha = beta = gamma = 0;}
 	double alpha;
 	double beta;
 	double gamma;
+};
+
+struct NumberedFacet
+{
+	QPolygonF pol;
+	int num;
 };
 
 typedef QMap<QString, BeamInfo> BeamData;
@@ -47,11 +57,17 @@ public:
 	QString GetBeamDataString();
 	QString GetBeamDataString(const QString &searchLine);
 	BeamInfo &GetBeamByKeys(const QString &trackKey, const QString &beamKey);
-	BeamInfo &GetBeamByNumber(int number);
+	void GetBeamByNumber(int number, BeamInfo &binfo);
 
 	const TrackMap &GetTrackMap() const;
 
 	Particle *GetParticle() const;
+	void GetFacets(QVector<NumberedFacet> &facets);
+
+	void SetTracing(const Point3f &incidentDir, int reflNum,
+					const Point3f &polarizationBasis);
+
+	QString RecoverTrack(long long id, int level);
 
 private:
 
@@ -64,7 +80,6 @@ private:
 		Aggregate
 	};
 
-private:
 	QMap<PType, QString> particleTypes;
 
 	TrackMap beamData;
@@ -72,4 +87,7 @@ private:
 	Particle *particle;
 	Tracing *tracing;
 	PType ptype;
+
+private:
+	QPolygonF Union(QVector<QPolygonF> polygons, double epsilon);
 };

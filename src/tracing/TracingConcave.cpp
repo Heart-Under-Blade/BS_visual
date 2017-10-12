@@ -91,12 +91,6 @@ void TracingConcave::TraceFirstBeam()
 	}
 }
 
-void TracingConcave::SelectVisibleFacetsForWavefront(IntArray &facetIDs)
-{
-	FindVisibleFacetsForWavefront(facetIDs);
-	SortFacets(m_incidentDir, facetIDs);
-}
-
 void TracingConcave::IntersectWithFacet(const IntArray &facetIDs, int prevFacetNum,
 										PolygonArray &resFacets)
 {
@@ -339,19 +333,6 @@ void TracingConcave::SetOpticalBeamParams(int facetID, const Beam &incidentBeam,
 	}
 }
 
-void TracingConcave::FindVisibleFacetsForWavefront(IntArray &facetIDs)
-{
-	for (int i = 0; i < m_particle->facetNum; ++i)
-	{
-		double cosIN = DotProduct(m_incidentDir, m_facets[i].in_normal);
-
-		if (cosIN >= EPS_COS_90) // beam incidents to this facet
-		{
-			facetIDs.arr[facetIDs.size++] = i;
-		}
-	}
-}
-
 bool TracingConcave::IsVisibleFacet(int facetID, const Beam &beam)
 {
 //	int loc = !beam.location;
@@ -427,117 +408,8 @@ void TracingConcave::CutFacetByShadows(int facetID, const IntArray &shadowFacetI
 	}
 }
 
-void TracingConcave::ProjectPointToFacet(const Point3f &point, const Point3f &direction,
-										 const Point3f &facetNormal, Point3f &projection)
-{
-	double t = DotProduct(point, facetNormal);
-	t = t + facetNormal.d_param;
-	double dp = DotProduct(direction, facetNormal);
-	t = t/dp;
-	projection = point - (direction * t);
-}
-
 // OPT: поменять все int и пр. параметры функций на ссылочные
 
-/* TODO: придумать более надёжную сортировку по близости
- * (как вариант определять, что одна грань затеняют другую по мин. и макс.
- * удалённым вершинам, типа: "//" )*/
-void TracingConcave::SortFacets(const Point3f &beamDir, IntArray &facetIds)
-{
-	float distances[MAX_VERTEX_NUM];
-
-	for (int i = 0; i < facetIds.size; ++i)
-	{
-		const int &id = facetIds.arr[i];
-		distances[i] = CalcMinDistanceToFacet(m_facets[id], beamDir);
-	}
-
-	int left = 0;
-	int rigth = facetIds.size - 1;
-
-	int stack[MAX_VERTEX_NUM*2];
-	int size = 0;
-
-	stack[size++] = left;
-	stack[size++] = rigth;
-
-	while (true)
-	{
-		float base = distances[(left + rigth)/2];
-
-		int i = left;
-		int j = rigth;
-
-		while (i <= j)
-		{
-			while (distances[i] < base)
-			{
-				++i;
-			}
-
-			while (distances[j] > base)
-			{
-				--j;
-			}
-
-			if (i <= j)	// exchange elems
-			{
-				float temp_d = distances[i];
-				distances[i] = distances[j];
-				distances[j] = temp_d;
-
-				int temp_v = facetIds.arr[i];
-				facetIds.arr[i] = facetIds.arr[j];
-				facetIds.arr[j] = temp_v;
-
-				++i;
-				--j;
-			}
-		}
-
-		if (i < rigth)
-		{
-			stack[size++] = i;
-			stack[size++] = rigth;
-		}
-
-		if (left < j)
-		{
-			stack[size++] = left;
-			stack[size++] = j;
-		}
-
-		if (size == 0)
-		{
-			break;
-		}
-
-		rigth = stack[--size];
-		left = stack[--size];
-	}
-}
-
-double TracingConcave::CalcMinDistanceToFacet(const Polygon &facet,
-											  const Point3f &beamDir)
-{
-	double dist = FLT_MAX;
-	const Point3f *pol = facet.arr;
-
-	for (int i = 0; i < facet.size; ++i)
-	{
-		// measure dist
-		Point3f point;
-		ProjectPointToFacet(pol[i], -beamDir, beamDir, point);
-		double newDist = sqrt(Norm(point - pol[i]));
-
-		if (newDist < dist) // choose minimum with previews
-		{
-			dist = newDist;
-		}
-	}
-
-	return dist;
-}
 
 /* TODO
  * Разобраться с параметром 'n' (кол-во вн. столкновений)
@@ -695,5 +567,21 @@ void TracingConcave::TraceFirstBeamFixedFacet(int facetID, bool &isIncident)
 	{
 		TraceByFacet(facetIDs, index);
 		isIncident = true;
+	}
+}
+
+
+void TracingConcave::GetVisiblePart(double b, double g, double a,
+									std::vector<Beam> &beams)
+{
+	m_particle->Rotate(b, g, a);
+	TraceFirstBeam();
+
+	for (int i = 0; i < m_treeSize; ++i)
+	{
+		if (m_beamTree[i].location == Location::Out)
+		{
+			beams.push_back(m_beamTree[i]);
+		}
 	}
 }

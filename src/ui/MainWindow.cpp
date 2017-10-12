@@ -3,12 +3,16 @@
 
 #include "BeamItemModel.h"
 #include "ParticleProxy.h"
-//#include "ParticleView.h"
+#include "ParticleView.h"
 
 #include <QDebug>
 #include <QtCharts/QAbstractAxis>
 #include <QtCharts/QValueAxis>
 #include <QtCharts/QPolarChart>
+
+#ifdef _DEBUG // DEB
+#include <iostream>
+#endif
 
 MainWindow::MainWindow(QWidget *parent) :
 	QMainWindow(parent),
@@ -20,38 +24,30 @@ MainWindow::MainWindow(QWidget *parent) :
 	precision = 4;
 	p_proxy = new ParticleProxy();
 
-	double h = 80, d = 40, ri = 1.31, b = 45, g = 30;
-	int ir = 3;
-
-	if (!std::ifstream("state.dat"))
-	{
-		std::ofstream stateOut("state.dat", std::ios::out);
-		stateOut << h << ' ' << d << ' ' << ri << ' '
-				 << b << ' ' << g << ' ' << ir << ' ';
-		stateOut.close();
-	}
-
-	std::ifstream stateIn("state.dat", std::ios::in);
-	stateIn >> h >> d >> ri >> b >> g >> ir;
-	stateIn.close();
-
-	ui->doubleSpinBox_height->setValue(h);
-	ui->doubleSpinBox_diameter->setValue(d);
-	ui->doubleSpinBox_refrIndex->setValue(ri);
-	ui->doubleSpinBox_beta->setValue(b);
-	ui->doubleSpinBox_gamma->setValue(g);
-	ui->spinBox_inter->setValue(ir);
-
 	FillParticleTypes();
-	SetAdditionalParamName();
 
+	RecoverState();
+
+	SetAdditionalParamName();
 	SetChart();
 
-	scene = new QGraphicsScene(this);
-	ui->graphicsView_particle->setScene(scene);
-	ui->graphicsView_particle->setRenderHints(QPainter::Antialiasing
-											  | QPainter::SmoothPixmapTransform);
+	SetParticleView();
 
+	ConnectWidgets();
+
+	DrawParticle(0.0f);
+}
+
+MainWindow::~MainWindow()
+{
+	SaveState();
+	delete ui;
+	delete p_proxy;
+	delete particleView;
+}
+
+void MainWindow::ConnectWidgets()
+{
 	QObject::connect(ui->doubleSpinBox_alpha, SIGNAL(valueChanged(double)),
 					 this, SLOT(DrawParticle(double)));
 	QObject::connect(ui->doubleSpinBox_beta, SIGNAL(valueChanged(double)),
@@ -59,24 +55,101 @@ MainWindow::MainWindow(QWidget *parent) :
 	QObject::connect(ui->doubleSpinBox_gamma, SIGNAL(valueChanged(double)),
 					 this, SLOT(DrawParticle(double)));
 
-	DrawParticle(0.0f);
-//	ParticleView pview;
-//	ui->groupBox_beam->layout()->addWidget(&pview);
+	QObject::connect(ui->doubleSpinBox_height, SIGNAL(valueChanged(double)),
+					 this, SLOT(DrawParticle(double)));
+	QObject::connect(ui->doubleSpinBox_diameter, SIGNAL(valueChanged(double)),
+					 this, SLOT(DrawParticle(double)));
+	QObject::connect(ui->doubleSpinBox_additional, SIGNAL(valueChanged(double)),
+					 this, SLOT(DrawParticle(double)));
+
+	QObject::connect(ui->comboBox_types, SIGNAL(currentIndexChanged(int)),
+					 this, SLOT(DrawParticle(int)));
 }
 
-MainWindow::~MainWindow()
+void MainWindow::SetParticleView()
 {
-	std::ofstream state("state.dat", std::ios::out);
-	double h = ui->doubleSpinBox_height->value();
-	double d = ui->doubleSpinBox_diameter->value();
-	double ri = ui->doubleSpinBox_refrIndex->value();
-	double b = ui->doubleSpinBox_beta->value();
-	double g = ui->doubleSpinBox_gamma->value();
-	int ir = ui->spinBox_inter->value();
-	state << h << ' ' << d << ' ' << ri << ' '
-		  << b << ' ' << g << ' ' << ir << ' ';
-	delete ui;
-	delete p_proxy;
+	scene = new QGraphicsScene(this);
+	particleView = new ParticleView(this);
+	particleView->setScene(scene);
+	particleView->setRenderHints(QPainter::Antialiasing
+								 | QPainter::SmoothPixmapTransform);
+	ui->groupBox_input->layout()->addWidget(particleView);
+}
+
+void MainWindow::WriteState()
+{
+	std::ofstream stateFile("state.dat", std::ios::out);
+
+//	foreach (QString key, state.keys())
+//	{
+//		stateFile << state.value(key).toDouble();
+//	}
+	stateFile << state["h"].toDouble()
+			<< ' ' << state["d"].toDouble()
+			<< ' ' << state["ad"].toDouble()
+			<< ' ' << state["ri"].toDouble()
+			<< ' ' << state["b"].toDouble()
+			<< ' ' << state["g"].toDouble()
+			<< ' ' << state["ir"].toInt()
+			<< ' ' << state["pt"].toInt();
+
+	stateFile.close();
+}
+
+void MainWindow::SaveState()
+{
+	state["h"] = ui->doubleSpinBox_height->value();
+	state["d"] = ui->doubleSpinBox_diameter->value();
+	state["ad"] = ui->doubleSpinBox_additional->value();
+	state["ri"] = ui->doubleSpinBox_refrIndex->value();
+	state["b"] = ui->doubleSpinBox_beta->value();
+	state["g"] = ui->doubleSpinBox_gamma->value();
+	state["ir"] = ui->spinBox_inter->value();
+	state["pt"] = ui->comboBox_types->currentIndex();
+
+	WriteState();
+}
+
+void MainWindow::RecoverState()
+{
+	double h = 80, d = 40, ad = 0, ri = 1.31,
+			b = 45, g = 30, ir = 3, pt = 0;
+
+	if (!std::ifstream("state.dat"))
+	{
+		WriteState();
+	}
+
+	std::ifstream stateIn("state.dat", std::ios::in);
+	stateIn >> h >> d >> ad >> ri >> b >> g >> ir >> pt;
+	stateIn.close();
+
+	ui->doubleSpinBox_height->setValue(h);
+	ui->doubleSpinBox_diameter->setValue(d);
+	ui->doubleSpinBox_additional->setValue(ad);
+	ui->doubleSpinBox_refrIndex->setValue(ri);
+	ui->doubleSpinBox_beta->setValue(b);
+	ui->doubleSpinBox_gamma->setValue(g);
+	ui->spinBox_inter->setValue(std::lround(ir));
+	ui->comboBox_types->setCurrentIndex(std::lround(pt));
+}
+
+void MainWindow::DrawParticle(int)
+{
+	DrawParticle(0.0f);
+}
+
+void MainWindow::DrawFacetNumber(QPointF pos, int num)
+{
+	QFont font;
+	font.setPointSize(5);
+	QString numText = QString::number(num);
+	QGraphicsTextItem *facetNumber = scene->addText(numText, font);
+
+	QPointF textCenter = facetNumber->boundingRect().center();
+	double x = pos.x() - textCenter.x();
+	double y = pos.y() - textCenter.y();
+	facetNumber->setPos(x, y);
 }
 
 void MainWindow::DrawParticle(double)
@@ -87,26 +160,35 @@ void MainWindow::DrawParticle(double)
 	Particle *particle = p_proxy->GetParticle();
 
 	Angle angle = GetRotateAngle();
+
 	particle->Rotate(DegToRad(angle.beta),
 					 DegToRad(angle.gamma),
 					 DegToRad(angle.alpha));
 
-	for (int i = 0; i < particle->facetNum; ++i)
+//	particle->Rotate(DegToRad(globalAngle.beta),
+//					 DegToRad(globalAngle.gamma),
+//					 DegToRad(globalAngle.alpha));
+
+	QVector<NumberedFacet> facets;
+	p_proxy->GetFacets(facets);
+
+//	QPen dashPen;
+//	dashPen.setStyle(Qt::DashLine);
+//	dashPen.setColor(Qt::gray);
+
+//	for (int i = facets.size()-1; i >= 0; --i)
+	for (int i = 0; i < facets.size(); ++i)
 	{
-		Facet &facet = particle->facets[i];
-		QPolygonF pol;
-
-		for (int j = 0; j < facet.size; ++j)
-		{
-			Point3f &p = particle->facets[i].arr[j];
-			pol.append(QPointF(p.c_x, p.c_y));
-		}
-
-		scene->addPolygon(pol, QPen()/*, QBrush(Qt::red)*/);
+		scene->addPolygon(facets[i].pol, /*dashPen*/ QPen(Qt::blue), QBrush(QColor(Qt::white)));
+		QPointF center = facets[i].pol.boundingRect().center();
+		DrawFacetNumber(center, facets[i].num);
 	}
 
+	QPen redPen;
+	redPen.setColor(Qt::red);
+
 	double size = particle->GetMainSize();
-	DrawAxes(size);
+//	DrawAxes(size);
 }
 
 void MainWindow::DrawAxes(double size)
@@ -155,17 +237,21 @@ void MainWindow::SetAdditionalParamName()
 	if (!paramName.isEmpty())
 	{
 		ui->label_additional->setText(paramName);
+		ui->label_additional->show();
+		ui->doubleSpinBox_additional->show();
+		hasAdditional = true;
 	}
 	else
 	{
 		ui->label_additional->hide();
 		ui->doubleSpinBox_additional->hide();
+		hasAdditional = false;
 	}
 }
 
-void MainWindow::on_comboBox_types_currentIndexChanged(int index)
+void MainWindow::on_comboBox_types_currentIndexChanged(int)
 {
-	ui->comboBox_types->setCurrentIndex(index);
+	SetAdditionalParamName();
 }
 
 void MainWindow::DrawBeamAnglePoints()
@@ -204,7 +290,7 @@ void MainWindow::SetParticle()
 	double h = ui->doubleSpinBox_height->value();
 	double d = ui->doubleSpinBox_diameter->value();
 
-	if (ui->doubleSpinBox_additional->isVisible())
+	if (hasAdditional)
 	{
 		double add = ui->doubleSpinBox_additional->value();
 		p_proxy->SetParticle(type, ri, h, d, add);
@@ -287,7 +373,9 @@ void MainWindow::on_treeView_tracks_clicked(const QModelIndex &index)
 
 	int beamNumber = itemData.toString().toInt();
 
-	BeamInfo info = p_proxy->GetBeamByNumber(beamNumber);
+	BeamInfo info;
+	p_proxy->GetBeamByNumber(beamNumber, info);
+
 	ui->label_track->setText(info.track);
 	ui->label_area->setText(QString::number(info.area, 'g', precision));
 	ui->label_optPath->setText(QString::number(info.beam.opticalPath, 'g', precision));

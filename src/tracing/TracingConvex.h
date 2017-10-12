@@ -16,4 +16,9 @@ public:
 
 protected:
 	void TraceInternalBeams(std::vector<Beam> &outBeams);
+
+	// Tracing interface
+public:
+	void GetVisiblePart(double b, double g, double a,
+						std::vector<Beam> &beams) override;
 };

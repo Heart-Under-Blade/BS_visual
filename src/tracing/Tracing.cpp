@@ -6,6 +6,9 @@
 #include "macro.h"
 #include "geometry_lib.h"
 
+#include <list>
+#include <functional>
+
 #ifdef _DEBUG // DEB
 #include <iostream>
 using namespace std;
@@ -159,11 +162,216 @@ void Tracing::CalcOpticalPath_initial(Beam &inBeam, Beam &outBeam)
 	outBeam.opticalPath = inBeam.opticalPath + fabs(FAR_ZONE_DISTANCE + outBeam.D);
 }
 
-void Tracing::TraceFirstBeam(int facetId, Beam &inBeam, Beam &outBeam)
+void Tracing::FindVisibleFacetsForWavefront(IntArray &facetIDs)
 {
-	SetPolygonByFacet(facetId, inBeam); // REF: try to exchange this to inBeam = m_facets[facetId]
-	SetPolygonByFacet(facetId, outBeam);
-	SetBeamOpticalParams(facetId, inBeam, outBeam);
+	for (int i = 0; i < m_particle->facetNum; ++i)
+	{
+		double cosIN = DotProduct(m_incidentDir, m_facets[i].in_normal);
+
+		if (cosIN >= EPS_COS_90) // beam incidents to this facet
+		{
+			facetIDs.arr[facetIDs.size++] = i;
+		}
+	}
+}
+
+void Tracing::ProjectPointToFacet(const Point3f &point, const Point3f &direction,
+								  const Point3f &facetNormal, Point3f &projection)
+{
+	double t = DotProduct(point, facetNormal);
+	t = t + facetNormal.d_param;
+	double dp = DotProduct(direction, facetNormal);
+	t = t/dp;
+	projection = point - (direction * t);
+}
+
+double Tracing::CalcMinDistanceToFacet(const Polygon &facet, const Point3f &beamDir)
+{
+	double dist = FLT_MAX;
+	const Point3f *pol = facet.arr;
+
+	for (int i = 0; i < facet.size; ++i)
+	{
+		// measure dist
+		Point3f point;
+		ProjectPointToFacet(pol[i], -beamDir, beamDir, point);
+		double newDist = sqrt(Norm(point - pol[i]));
+
+		if (newDist < dist) // choose minimum with previews
+		{
+			dist = newDist;
+		}
+	}
+
+	return dist;
+}
+
+
+/* TODO: придумать более надёжную сортировку по близости
+ * (как вариант определять, что одна грань затеняют другую по мин. и макс.
+ * удалённым вершинам, типа: "//" )*/
+void Tracing::SortFacets(const Point3f &beamDir, IntArray &facetIds)
+{
+	float distances[MAX_VERTEX_NUM];
+
+	for (int i = 0; i < facetIds.size; ++i)
+	{
+		const int &id = facetIds.arr[i];
+		distances[i] = CalcMinDistanceToFacet(m_facets[id], beamDir);
+	}
+
+	int left = 0;
+	int rigth = facetIds.size - 1;
+
+	int stack[MAX_VERTEX_NUM*2];
+	int size = 0;
+
+	stack[size++] = left;
+	stack[size++] = rigth;
+
+	while (true)
+	{
+		float base = distances[(left + rigth)/2];
+
+		int i = left;
+		int j = rigth;
+
+		while (i <= j)
+		{
+			while (distances[i] < base)
+			{
+				++i;
+			}
+
+			while (distances[j] > base)
+			{
+				--j;
+			}
+
+			if (i <= j)	// exchange elems
+			{
+				float temp_d = distances[i];
+				distances[i] = distances[j];
+				distances[j] = temp_d;
+
+				int temp_v = facetIds.arr[i];
+				facetIds.arr[i] = facetIds.arr[j];
+				facetIds.arr[j] = temp_v;
+
+				++i;
+				--j;
+			}
+		}
+
+		if (i < rigth)
+		{
+			stack[size++] = i;
+			stack[size++] = rigth;
+		}
+
+		if (left < j)
+		{
+			stack[size++] = left;
+			stack[size++] = j;
+		}
+
+		if (size == 0)
+		{
+			break;
+		}
+
+		rigth = stack[--size];
+		left = stack[--size];
+	}
+}
+
+void Tracing::SortFacets_2(const Point3f &beamDir, Location location,
+						   IntArray &facetIds)
+{
+	std::list<int> sortedIDs;
+
+	for (int i = 0; i < facetIds.size; ++i)
+	{
+		sortedIDs.push_back(facetIds.arr[i]);
+	}
+
+	int loc = (location == Location::In) ? 0 : 1;
+
+	auto Overlays = [&](int a, int b)
+	{
+		const Point3f &ca = m_facets[a].center;
+		const Point3f &n = m_facets[b].normal[loc];
+
+		Point3f pProj;
+		ProjectPointToFacet(ca, -beamDir, n, pProj);
+
+		Point3f va = pProj-ca;
+		double cosBP = DotProduct(beamDir, va);
+
+		double lenVA = Length(va);
+
+		if (cosBP < EPS_COS_90)
+		{
+			for (int i = 0; i < m_facets[b].size; ++i)
+			{
+				if (Length(pProj - m_facets[b].arr[i]) < lenVA)
+				{
+					return true;
+				}
+			}
+		}
+
+		return false;
+//		return (cosBP < EPS_COS_90) && (cosBC < EPS_COS_90);
+	};
+
+	sortedIDs.sort(Overlays);
+
+	int i = 0;
+
+	for (int &val : sortedIDs)
+	{
+		facetIds.arr[i++] = val;
+	}
+}
+
+void Tracing::SelectVisibleFacetsForWavefront(IntArray &facetIDs)
+{
+	FindVisibleFacetsForWavefront(facetIDs);
+//	SortFacets(m_incidentDir, facetIDs);
+	SortFacets_2(m_incidentDir, Location::Out, facetIDs);
+}
+
+void Tracing::TraceFirstBeam(std::vector<Beam> &outBeams)
+{
+	m_incommingEnergy = 0;
+	m_treeSize = 0;
+
+	for (int facetID = 0; facetID < m_particle->facetNum; ++facetID)
+	{
+		const Point3f &extNormal = m_facets[facetID].ex_normal;
+		double cosIN = DotProduct(m_incidentDir, extNormal);
+
+		if (cosIN >= EPS_M_COS_90) /// beam is not incident to this facet
+		{
+			continue;
+		}
+
+		Beam inBeam, outBeam;
+		SetPolygonByFacet(facetID, inBeam); // REF: try to exchange this to inBeam = m_facets[facetId]
+		SetPolygonByFacet(facetID, outBeam);
+		SetBeamOpticalParams(facetID, inBeam, outBeam);
+
+		outBeam.lastFacetID = facetID;
+		outBeam.level = 0;
+		SetBeamID(outBeam);
+		outBeams.push_back(outBeam);
+		PushBeamToTree(inBeam, facetID, 0);
+
+#ifdef _CHECK_ENERGY_BALANCE
+		CalcFacetEnergy(facetID, outBeam);
+#endif
+	}
 }
 
 void Tracing::CalcFacetEnergy(int facetID, const Polygon &lightedPolygon)
@@ -195,11 +403,11 @@ void Tracing::SplitBeamByParticle(double beta, double gamma, const std::vector<s
 		Beam incidentBeam;
 
 		/// first incident beam
-		{
-			Beam outBeam;
-			TraceFirstBeam(facetId, incidentBeam, outBeam);
-			outBuff.push_back(outBeam);
-		}
+//		{
+//			Beam outBeam;
+//			TraceFirstBeam(facetId, incidentBeam, outBeam);
+//			outBuff.push_back(outBeam);
+//		}
 
 		unsigned int size = tracks.at(i).size();
 
@@ -730,6 +938,7 @@ double Tracing::GetIncomingEnergy() const
 {
 	return m_incommingEnergy;
 }
+
 
 //double Tracing::CrossSection(const Point3f &beamDir) const
 //{
