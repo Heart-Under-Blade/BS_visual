@@ -37,6 +37,27 @@ struct NumberedFacet
 	int num;
 };
 
+struct Axes
+{
+	Axes()
+	{
+		x = Point3f(1, 0, 0);
+		y = Point3f(0, 1, 0);
+		z = Point3f(0, 0, 1);
+	}
+
+	Axes(const Point3f &px, const Point3f &py, const Point3f &pz)
+	{
+		x = px;
+		y = py;
+		z = pz;
+	}
+
+	Point3f x;
+	Point3f y;
+	Point3f z;
+};
+
 typedef QMap<QString, BeamInfo> BeamData;
 typedef QMap<QString, BeamData> TrackMap;
 
@@ -50,6 +71,8 @@ public:
 					 double diameter, double additional = 1.0);
 	void Trace(const Angle &angle, int reflNum);
 	void Clear();
+
+	QVector<QPointF> Rotate(const Angle &rotAngle, const Angle &viewAngle);
 
 	QStringList GetParticleTypes() const;
 	QString GetAdditionalParticleParam(const QString &type) const;
@@ -87,6 +110,7 @@ private:
 	Particle *particle;
 	Tracing *tracing;
 	PType ptype;
+	Axes axes;
 
 private:
 	QPolygonF Union(QVector<QPolygonF> polygons, double epsilon);

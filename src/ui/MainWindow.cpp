@@ -29,7 +29,7 @@ MainWindow::MainWindow(QWidget *parent) :
 	RecoverState();
 
 	SetAdditionalParamName();
-	SetChart();
+	SetAngleChart();
 
 	SetParticleView();
 
@@ -55,6 +55,13 @@ void MainWindow::ConnectWidgets()
 	QObject::connect(ui->doubleSpinBox_gamma, SIGNAL(valueChanged(double)),
 					 this, SLOT(DrawParticle(double)));
 
+	QObject::connect(ui->doubleSpinBox_view_alpha, SIGNAL(valueChanged(double)),
+					 this, SLOT(DrawParticle(double)));
+	QObject::connect(ui->doubleSpinBox_view_beta, SIGNAL(valueChanged(double)),
+					 this, SLOT(DrawParticle(double)));
+	QObject::connect(ui->doubleSpinBox_view_gamma, SIGNAL(valueChanged(double)),
+					 this, SLOT(DrawParticle(double)));
+
 	QObject::connect(ui->doubleSpinBox_height, SIGNAL(valueChanged(double)),
 					 this, SLOT(DrawParticle(double)));
 	QObject::connect(ui->doubleSpinBox_diameter, SIGNAL(valueChanged(double)),
@@ -73,7 +80,9 @@ void MainWindow::SetParticleView()
 	particleView->setScene(scene);
 	particleView->setRenderHints(QPainter::Antialiasing
 								 | QPainter::SmoothPixmapTransform);
-	ui->groupBox_input->layout()->addWidget(particleView);
+
+	QGridLayout *lo = (QGridLayout*)ui->groupBox_input->layout();
+	lo->addWidget(particleView, 5, 0, 1, 4);
 }
 
 void MainWindow::WriteState()
@@ -157,17 +166,9 @@ void MainWindow::DrawParticle(double)
 	scene->clear();
 	SetParticle();
 
-	Particle *particle = p_proxy->GetParticle();
-
-	Angle angle = GetRotateAngle();
-
-	particle->Rotate(DegToRad(angle.beta),
-					 DegToRad(angle.gamma),
-					 DegToRad(angle.alpha));
-
-//	particle->Rotate(DegToRad(globalAngle.beta),
-//					 DegToRad(globalAngle.gamma),
-//					 DegToRad(globalAngle.alpha));
+	Angle rotAngle = GetRotateAngle();
+	Angle viewAngle = GetViewAngle();
+	QVector<QPointF> axes = p_proxy->Rotate(rotAngle, viewAngle);
 
 	QVector<NumberedFacet> facets;
 	p_proxy->GetFacets(facets);
@@ -187,36 +188,36 @@ void MainWindow::DrawParticle(double)
 	QPen redPen;
 	redPen.setColor(Qt::red);
 
-	double size = particle->GetMainSize();
-//	DrawAxes(size);
+	DrawAxes(axes);
 }
 
-void MainWindow::DrawAxes(double size)
+void MainWindow::DrawAxis(const QPointF &axis, const QString &letter)
 {
-	double arrowSize = size/10;
-
 	QPen redPen(Qt::red);
-	QBrush redBrush(Qt::red);
+	scene->addLine(0, 0, axis.x(), axis.y(), redPen);
+	QGraphicsItem *textX = scene->addText(letter);
+	textX->moveBy(axis.x(), axis.y());
+}
 
-	scene->addLine(0, 0, size, 0, redPen);
-	QPolygonF arrowX;
-	arrowX << QPointF(size, 0) << QPointF(size-arrowSize, arrowSize/4)
-		   << QPointF(size-arrowSize, -arrowSize/4) << QPointF(size, 0);
-	scene->addPolygon(arrowX, redPen, redBrush);
-	QGraphicsItem *textX = scene->addText("X");
-	textX->moveBy(size, -arrowSize);
+void MainWindow::DrawAxes(const QVector<QPointF> &axes)
+{
+//	QBrush redBrush(Qt::red);
+	double size = 10;
 
-	scene->addLine(0, 0, 0, size, redPen);
-	QPolygonF arrowY;
-	arrowY << QPointF(0, size) << QPointF(arrowSize/4, size-arrowSize)
-		   << QPointF(-arrowSize/4, size-arrowSize) << QPointF(0, size);
-	scene->addPolygon(arrowY, redPen, redBrush);
-	QGraphicsItem *textY = scene->addText("Y");
-	textY->moveBy(-arrowSize/2, size);
+	DrawAxis(axes[0], "X");
+	DrawAxis(axes[1], "Y");
+	DrawAxis(axes[2], "Z");
+//	QPolygonF arrowX;
+//	arrowX << QPointF(size, 0) << QPointF(size-arrowSize, arrowSize/4)
+//		   << QPointF(size-arrowSize, -arrowSize/4) << QPointF(size, 0);
+//	scene->addPolygon(arrowX, redPen, redBrush);
 
+//	QPolygonF arrowY;
+//	arrowY << QPointF(0, size) << QPointF(arrowSize/4, size-arrowSize)
+//		   << QPointF(-arrowSize/4, size-arrowSize) << QPointF(0, size);
+//	scene->addPolygon(arrowY, redPen, redBrush);
 	// pseudo axis 'Z'
-	scene->addEllipse(-arrowSize/2, -arrowSize/2, arrowSize, arrowSize, redPen);
-	/*QGraphicsItem *textZ = */scene->addText("Z");
+	scene->addEllipse(-size, -size, size*2, size*2, QPen(Qt::red));
 }
 
 void MainWindow::FillParticleTypes()
@@ -304,9 +305,18 @@ void MainWindow::SetParticle()
 Angle MainWindow::GetRotateAngle()
 {
 	Angle a;
-	a.alpha = ui->doubleSpinBox_alpha->value();
-	a.beta = ui->doubleSpinBox_beta->value();
-	a.gamma = ui->doubleSpinBox_gamma->value();
+	a.alpha = DegToRad(ui->doubleSpinBox_alpha->value());
+	a.beta = DegToRad(ui->doubleSpinBox_beta->value());
+	a.gamma = DegToRad(ui->doubleSpinBox_gamma->value());
+	return a;
+}
+
+Angle MainWindow::GetViewAngle()
+{
+	Angle a;
+	a.alpha = DegToRad(ui->doubleSpinBox_view_alpha->value());
+	a.beta = DegToRad(ui->doubleSpinBox_view_beta->value());
+	a.gamma = DegToRad(ui->doubleSpinBox_view_gamma->value());
 	return a;
 }
 
@@ -323,7 +333,7 @@ void MainWindow::on_pushButton_clicked()
 	DrawBeamAnglePoints();
 }
 
-void MainWindow::SetChart()
+void MainWindow::SetAngleChart()
 {
 	QPolarChart *chart = new QPolarChart();
 

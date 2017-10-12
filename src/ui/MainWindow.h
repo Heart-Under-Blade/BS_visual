@@ -47,16 +47,18 @@ private:
 private:
 	void FillParticleTypes();
 	void SetAdditionalParamName();
-	void SetChart();
+	void SetAngleChart();
 	void DrawBeamAnglePoints();
 	void SetTrackTree();
 	Angle GetRotateAngle();
+	Angle GetViewAngle();
 	void SetParticle();
-	void DrawAxes(double size);
+	void DrawAxes(const QVector<QPointF> &axes);
 	void RecoverState();
 	void SaveState();
 	void WriteState();
 	void ConnectWidgets();
 	void SetParticleView();
 	void DrawFacetNumber(QPointF pos, int num);
+	void DrawAxis(const QPointF &axis, const QString &letter);
 };

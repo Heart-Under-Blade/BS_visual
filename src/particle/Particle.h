@@ -33,6 +33,10 @@ public:
 	const Symmetry &GetSymmetry() const;
 	virtual void GetAggPartFacetIDRange(int /*id*/, int &/*begin*/, int &/*end*/) const {}
 
+	void RotatePoints(double beta, double gamma, double alpha,
+					  const std::vector<Point3f> &points,
+					  std::vector<Point3f> &result);
+
 	void Output();
 
 public:

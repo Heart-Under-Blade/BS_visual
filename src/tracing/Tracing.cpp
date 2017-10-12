@@ -338,8 +338,8 @@ void Tracing::SortFacets_2(const Point3f &beamDir, Location location,
 void Tracing::SelectVisibleFacetsForWavefront(IntArray &facetIDs)
 {
 	FindVisibleFacetsForWavefront(facetIDs);
-//	SortFacets(m_incidentDir, facetIDs);
-	SortFacets_2(m_incidentDir, Location::Out, facetIDs);
+	SortFacets(m_incidentDir, facetIDs);
+//	SortFacets_2(m_incidentDir, Location::Out, facetIDs);
 }
 
 void Tracing::TraceFirstBeam(std::vector<Beam> &outBeams)

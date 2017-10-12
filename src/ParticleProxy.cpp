@@ -221,9 +221,29 @@ void ParticleProxy::Trace(const Angle &angle, int reflNum)
 			data.insert(info.track, info);
 			beamData.insert(dir, data);
 		}
-//		contr.scatMatrix.insert(0, thetaDeg, area*M);
 	}
-		int b =0;
+}
+
+QVector<QPointF> ParticleProxy::Rotate(const Angle &rotAngle, const Angle &viewAngle)
+{
+	particle->Rotate(rotAngle.beta + viewAngle.beta,
+					 rotAngle.gamma + viewAngle.gamma,
+					 rotAngle.alpha + viewAngle.alpha);
+
+	vector<Point3f> resAxes;
+	particle->RotatePoints(viewAngle.beta, viewAngle.gamma, viewAngle.alpha,
+						   vector<Point3f>{axes.x, axes.y, axes.z}, resAxes);
+
+	double size = particle->GetMainSize();
+	resAxes[0] = resAxes[0] * size;
+	resAxes[1] = resAxes[1] * size;
+	resAxes[2] = resAxes[2] * size;
+
+	QVector<QPointF> res;
+	res.append(QPointF{resAxes.at(0).c_x, resAxes.at(0).c_y});
+	res.append(QPointF{resAxes.at(1).c_x, resAxes.at(1).c_y});
+	res.append(QPointF{resAxes.at(2).c_x, resAxes.at(2).c_y});
+	return res;
 }
 
 QStringList ParticleProxy::GetParticleTypes() const
@@ -346,8 +366,8 @@ void ParticleProxy::GetFacets(QVector<NumberedFacet> &facets)
 	tracing->SelectVisibleFacetsForWavefront(facetIDs);
 //	tracing->FindVisibleFacetsForWavefront(facetIDs);
 
-//	for (int i = facetIDs.size-1; i >= 0; --i)
-	for (int i = 0; i < facetIDs.size; ++i)
+	for (int i = facetIDs.size-1; i >= 0; --i)
+//	for (int i = 0; i < facetIDs.size; ++i)
 	{
 		int id = facetIDs.arr[i];
 #ifdef _DEBUG // DEB
