@@ -230,17 +230,19 @@ void ParticleProxy::TranslateCoordinates(QPolygonF &pol)
 {
 	for (int i = 0; i < pol.size(); ++i)
 	{
-//		pol[i] = -pol[i];
-		pol[i].setX(pol[i].x());
 		pol[i].setY(-pol[i].y());
 	}
 }
 
 QPolygonF ParticleProxy::Rotate(const Angle &rotAngle, const Angle &viewAngle)
 {
-	particle->Rotate(rotAngle.beta + viewAngle.beta,
-					 rotAngle.gamma + viewAngle.gamma,
-					 rotAngle.alpha + viewAngle.alpha);
+	particle->Rotate(rotAngle.beta /*+ viewAngle.beta*/,
+					 rotAngle.gamma /*+ viewAngle.gamma*/,
+					 rotAngle.alpha /*+ viewAngle.alpha*/);
+
+	particle->RotateGlobal(viewAngle.beta, viewAngle.gamma, viewAngle.alpha);
+//	particle->Fix();
+
 
 	vector<Point3f> resAxes;
 	particle->RotatePoints(viewAngle.beta, viewAngle.gamma, viewAngle.alpha,
@@ -371,22 +373,12 @@ void ParticleProxy::GetVisibleFacets(QVector<NumberedFacet> &facets)
 	SetTracing(incidentDir, 0, polarizationBasis);
 
 	IntArray facetIDs;
-
-//	for (int i = 0; i < particle->facetNum; ++i)
-//	{
-//		facetIDs.Add(i);
-//	}
-
 	tracing->SelectVisibleFacetsForWavefront(facetIDs);
-//	tracing->FindVisibleFacetsForWavefront(facetIDs);
 
 	for (int i = facetIDs.size-1; i >= 0; --i)
 //	for (int i = 0; i < facetIDs.size; ++i)
 	{
 		int id = facetIDs.arr[i];
-#ifdef _DEBUG // DEB
-//		std::cout << id << " ";
-#endif
 		Facet &facet = particle->facets[id];
 		QPolygonF pol;
 
@@ -397,38 +389,8 @@ void ParticleProxy::GetVisibleFacets(QVector<NumberedFacet> &facets)
 		}
 
 		TranslateCoordinates(pol);
-		facets.append(NumberedFacet{pol, id});
+		facets.append(NumberedFacet{id, pol});
 	}
-
-//	vector<Beam> outBeams;
-//	tracing->GetVisiblePart(betaR, gammaR, alphaR, outBeams);
-
-//	QMap<long long, QPolygonF> beams;
-
-//	foreach (Beam b, outBeams)
-//	{
-//		QPolygonF pol;
-
-//		for (int i = 0; i < b.size; ++i)
-//		{
-//			Point3f &p = b.arr[i];
-//			pol.append(QPointF(p.c_x, p.c_y));
-//		}
-
-//		beams.insertMulti(b.id, pol);
-//	}
-
-//	foreach (long long key, beams.uniqueKeys())
-//	{
-//#ifdef _DEBUG // DEB
-//		if (RecoverTrack(key, 0) == "12") {
-//			int f = 0;
-//#endif
-//		auto pols = beams.values(key);
-//		QPolygonF resPol = Union(pols.toVector(), (double)EPS_MERGE);
-//		visibleParts.append(resPol);
-//		}
-//	}
 }
 
 // BUG: не всегда правильно объединяет, пофиксить

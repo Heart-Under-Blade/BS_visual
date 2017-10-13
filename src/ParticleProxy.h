@@ -33,8 +33,8 @@ struct Angle
 
 struct NumberedFacet
 {
-	QPolygonF pol;
 	int num;
+	QPolygonF pol;
 };
 
 struct Axes

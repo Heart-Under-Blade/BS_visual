@@ -25,9 +25,3 @@ public:
 	Point3f Center() const;
 	Point3f Normal() const;
 };
-
-struct PolygonArray
-{
-	Polygon arr[MAX_POLYGON_NUM];
-	int size = 0;
-};

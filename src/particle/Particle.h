@@ -23,6 +23,7 @@ public:
 	void SetFromFile(const char *filename);
 
 	void Rotate(double beta, double gamma, double alpha);
+	void RotateGlobal(double phi, double theta, double psy);
 	void Move(float dx, float dy, float dz);
 	void Fix();
 
@@ -67,6 +68,7 @@ private:
 	void RotatePoint(const Point3f &point, Point3f &result);
 	void RotateCenters();
 	void SetRotateMatrix(double beta, double gamma, double alpha);
+	void SetRotateMatrixGlobal(double phi, double theta, double psy);
 
 private:
 	double m_rotMatrix[ROT_MTR_RANK][ROT_MTR_RANK];	///< rotation matrix for vertices

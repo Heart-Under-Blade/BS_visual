@@ -41,6 +41,44 @@ void Particle::Rotate(double beta, double gamma, double alpha)
 	RotateCenters();
 }
 
+void Particle::RotateGlobal(double phi, double theta, double psy)
+{
+	SetRotateMatrixGlobal(phi, theta, psy);
+
+	// REF: слить всё в один цикл
+	for (int i = 0; i < facetNum; ++i)
+	{
+		for (int j = 0; j < facets[i].size; ++j)
+		{
+			Point3f point;
+			RotatePoint(facets[i].arr[j], point);
+			facets[i].arr[j] = point;
+		}
+	}
+
+	for (int i = 0; i < facetNum; ++i)
+	{
+		Point3f point;
+		RotatePoint(facets[i].in_normal, point);
+		facets[i].in_normal = point;
+	}
+
+	SetDParams();
+
+	for (int i = 0; i < facetNum; ++i)
+	{
+		facets[i].ex_normal = -facets[i].in_normal;
+		facets[i].ex_normal.d_param = -facets[i].in_normal.d_param;
+	}
+
+	for (int i = 0; i < facetNum; ++i)
+	{
+		Point3f point;
+		RotatePoint(defaultFacets[i].center, point);
+		facets[i].center = point;
+	}
+}
+
 void Particle::Fix()
 {
 	for (int i = 0; i < facetNum; ++i)
@@ -181,6 +219,31 @@ void Particle::SetRotateMatrix(double beta, double gamma, double alpha)
 	m_rotMatrix[0][2] = cosA*sinB;
 	m_rotMatrix[1][2] = sinA*sinB;
 	m_rotMatrix[2][2] = cosB;
+}
+
+void Particle::SetRotateMatrixGlobal(double phi, double theta, double psy)
+{
+	double cosF, cosT, cosP,
+			sinF, sinT, sinP;
+
+	sincos(phi, &sinF, &cosF);
+	sincos(theta, &sinT, &cosT);
+	sincos(psy, &sinP, &cosP);
+
+	double sinFsinT = sinF*sinT;
+	double cosFsinT = cosF*sinT;
+
+	m_rotMatrix[0][0] = cosT*cosP;
+	m_rotMatrix[1][0] = sinFsinT*cosP + cosF*sinP;
+	m_rotMatrix[2][0] = -cosFsinT*cosP + sinF*sinP;
+
+	m_rotMatrix[0][1] = -cosT*sinP;
+	m_rotMatrix[1][1] = -sinFsinT*sinP + cosF*cosP;
+	m_rotMatrix[2][1] = cosFsinT*sinP + sinF*cosP;
+
+	m_rotMatrix[0][2] = sinT;
+	m_rotMatrix[1][2] = -sinF*cosT;
+	m_rotMatrix[2][2] = cosF*cosT;
 }
 
 void Particle::RotateNormals()

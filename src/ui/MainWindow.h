@@ -31,10 +31,9 @@ private slots:
 	void on_toolButton_resetRot_clicked();
 	void on_toolButton_resetView_clicked();
 
-	void DrawParticle(double);
+	void DrawParticle();
 	void DrawParticle(int);
-
-	void on_checkBox_axes_toggled(bool checked);
+	void DrawParticle(double);
 
 private:
 	Ui::MainWindow *ui;
@@ -43,12 +42,9 @@ private:
 	QChartView *chartView;
 	QScatterSeries *angleSeries;
 	ParticleView *particleView;
-	QGraphicsScene *scene;
 	int precision;
 	QMap<QString, QVariant> state;
 	bool hasAdditional;
-	bool isShowAxes;
-	bool isShowNumbers;
 	double coordinateOffset = 90;
 
 private:
@@ -60,12 +56,9 @@ private:
 	Angle GetRotateAngle();
 	Angle GetViewAngle();
 	void SetParticle();
-	void DrawAxes(const QVector<QPointF> &axes);
 	void RecoverState();
 	void SaveState();
 	void WriteState();
 	void ConnectWidgets();
 	void SetParticleView();
-	void DrawFacetNumber(QPointF pos, int num);
-	void DrawAxis(const QPointF &axis, const QString &letter);
 };

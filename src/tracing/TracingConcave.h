@@ -2,6 +2,12 @@
 
 #include "Tracing.h"
 
+struct PolygonArray
+{
+	Polygon arr[MAX_POLYGON_NUM];
+	int size = 0;
+};
+
 /** NOTE: пучки выходят со случайно ориентированным порядком вершин */
 class TracingConcave : public Tracing
 {
