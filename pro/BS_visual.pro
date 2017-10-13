@@ -67,4 +67,4 @@ FORMS += \
 		../src/ui/*.ui \
 
 RESOURCES += \
-    shaders.qrc
+	icon.qrc

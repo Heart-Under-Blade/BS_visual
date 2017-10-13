@@ -28,9 +28,13 @@ private slots:
 	void on_pushButton_clicked();
 	void on_treeView_tracks_clicked(const QModelIndex &index);
 	void on_lineEdit_search_textChanged(const QString &arg1);
+	void on_toolButton_resetRot_clicked();
+	void on_toolButton_resetView_clicked();
 
 	void DrawParticle(double);
 	void DrawParticle(int);
+
+	void on_checkBox_axes_toggled(bool checked);
 
 private:
 	Ui::MainWindow *ui;
@@ -43,6 +47,8 @@ private:
 	int precision;
 	QMap<QString, QVariant> state;
 	bool hasAdditional;
+	bool isShowAxes;
+	bool isShowNumbers;
 	double coordinateOffset = 90;
 
 private:

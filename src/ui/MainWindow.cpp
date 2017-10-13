@@ -24,6 +24,8 @@ MainWindow::MainWindow(QWidget *parent) :
 	precision = 4;
 	p_proxy = new ParticleProxy();
 
+//	ui->mainToolBar->addAction()
+
 	FillParticleTypes();
 
 	RecoverState();
@@ -81,8 +83,9 @@ void MainWindow::SetParticleView()
 	particleView->setRenderHints(QPainter::Antialiasing
 								 | QPainter::SmoothPixmapTransform);
 
-	QGridLayout *lo = (QGridLayout*)ui->groupBox_input->layout();
-	lo->addWidget(particleView, 5, 0, 1, 4);
+	ui->widget_particleView->setLayout(new QGridLayout());
+	QGridLayout *lo = (QGridLayout*)ui->widget_particleView->layout();
+	lo->addWidget(particleView, 6, 0, 1, 4);
 }
 
 void MainWindow::WriteState()
@@ -446,4 +449,25 @@ void MainWindow::on_lineEdit_search_textChanged(const QString &arg1)
 		stFont.setItalic(true);
 		ui->lineEdit_search->setFont(stFont);
 	}
+}
+
+void MainWindow::on_toolButton_resetRot_clicked()
+{
+	ui->doubleSpinBox_alpha->setValue(0.0f);
+	ui->doubleSpinBox_beta->setValue(0.0f);
+	ui->doubleSpinBox_gamma->setValue(0.0f);
+	DrawParticle(0.0f);
+}
+
+void MainWindow::on_toolButton_resetView_clicked()
+{
+	ui->doubleSpinBox_view_alpha->setValue(0.0f);
+	ui->doubleSpinBox_view_beta->setValue(0.0f);
+	ui->doubleSpinBox_view_gamma->setValue(0.0f);
+	DrawParticle(0.0f);
+}
+
+void MainWindow::on_checkBox_axes_toggled(bool checked)
+{
+
 }
