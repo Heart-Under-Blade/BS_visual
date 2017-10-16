@@ -137,6 +137,20 @@ void Particle::RotatePoints(double beta, double gamma, double alpha,
 	}
 }
 
+void Particle::RotatePointsGlobal(double phi, double theta, double psy,
+								  const std::vector<Point3f> &points,
+								  std::vector<Point3f> &result)
+{
+	SetRotateMatrixGlobal(phi, theta, psy);
+
+	for (const Point3f &point : points)
+	{
+		Point3f resPoint;
+		RotatePoint(point, resPoint);
+		result.push_back(resPoint);
+	}
+}
+
 void Particle::Move(float dx, float dy, float dz)
 {
 	for (int i = 0; i < facetNum; ++i)

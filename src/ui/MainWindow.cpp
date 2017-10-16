@@ -57,11 +57,11 @@ void MainWindow::ConnectWidgets()
 	QObject::connect(ui->doubleSpinBox_gamma, SIGNAL(valueChanged(double)),
 					 this, SLOT(DrawParticle(double)));
 
-	QObject::connect(ui->doubleSpinBox_view_alpha, SIGNAL(valueChanged(double)),
+	QObject::connect(ui->doubleSpinBox_phi, SIGNAL(valueChanged(double)),
 					 this, SLOT(DrawParticle(double)));
-	QObject::connect(ui->doubleSpinBox_view_beta, SIGNAL(valueChanged(double)),
+	QObject::connect(ui->doubleSpinBox_theta, SIGNAL(valueChanged(double)),
 					 this, SLOT(DrawParticle(double)));
-	QObject::connect(ui->doubleSpinBox_view_gamma, SIGNAL(valueChanged(double)),
+	QObject::connect(ui->doubleSpinBox_psy, SIGNAL(valueChanged(double)),
 					 this, SLOT(DrawParticle(double)));
 
 	QObject::connect(ui->doubleSpinBox_height, SIGNAL(valueChanged(double)),
@@ -269,9 +269,9 @@ Angle MainWindow::GetRotateAngle()
 Angle MainWindow::GetViewAngle()
 {
 	Angle a;
-	a.alpha = DegToRad(ui->doubleSpinBox_view_alpha->value() + coordinateOffset);
-	a.beta = DegToRad(ui->doubleSpinBox_view_beta->value());
-	a.gamma = DegToRad(ui->doubleSpinBox_view_gamma->value());
+	a.alpha = -DegToRad(ui->doubleSpinBox_phi->value() - coordinateOffset);
+	a.beta = DegToRad(ui->doubleSpinBox_theta->value());
+	a.gamma = DegToRad(ui->doubleSpinBox_psy->value());
 	return a;
 }
 
@@ -403,8 +403,8 @@ void MainWindow::on_toolButton_resetRot_clicked()
 
 void MainWindow::on_toolButton_resetView_clicked()
 {
-	ui->doubleSpinBox_view_alpha->setValue(0.0f);
-	ui->doubleSpinBox_view_beta->setValue(0.0f);
-	ui->doubleSpinBox_view_gamma->setValue(0.0f);
+	ui->doubleSpinBox_phi->setValue(0.0f);
+	ui->doubleSpinBox_psy->setValue(0.0f);
+	ui->doubleSpinBox_theta->setValue(0.0f);
 	DrawParticle(0.0f);
 }

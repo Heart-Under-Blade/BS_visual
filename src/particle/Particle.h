@@ -38,6 +38,9 @@ public:
 					  const std::vector<Point3f> &points,
 					  std::vector<Point3f> &result);
 
+	void RotatePointsGlobal(double phi, double theta, double psy,
+							const std::vector<Point3f> &points,
+							std::vector<Point3f> &result);
 	void Output();
 
 public:

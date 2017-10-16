@@ -243,10 +243,9 @@ QPolygonF ParticleProxy::Rotate(const Angle &rotAngle, const Angle &viewAngle)
 	particle->RotateGlobal(viewAngle.beta, viewAngle.gamma, viewAngle.alpha);
 //	particle->Fix();
 
-
 	vector<Point3f> resAxes;
-	particle->RotatePoints(viewAngle.beta, viewAngle.gamma, viewAngle.alpha,
-						   vector<Point3f>{axes.x, axes.y, axes.z}, resAxes);
+	particle->RotatePointsGlobal(viewAngle.beta, viewAngle.gamma, viewAngle.alpha,
+								 vector<Point3f>{axes.x, axes.y, axes.z}, resAxes);
 
 	double size = particle->GetMainSize();
 	resAxes[0] = resAxes[0] * size;
