@@ -118,20 +118,31 @@ void ParticleProxy::SetParticle(const QString &type, double refrIndex,
 
 void RotateMuller(const Point3f &dir, matrix &M)
 {
-	const float &x = dir.c_x;
-	const float &y = dir.c_y;
+	const float &z = dir.c_z;
 
-	double tmp = y*y;
-
-	tmp = acos(x/sqrt(x*x+tmp));
-
-	if (y < 0)
+	if (z >= 1-DBL_EPSILON && z <= DBL_EPSILON-1)
 	{
-		tmp = M_2PI-tmp;
-	}
+		const float &y = dir.c_y;
 
-	tmp *= -2.0;
-	RightRotateMueller(M, cos(tmp), sin(tmp));
+		if (y*y > DBL_EPSILON)
+		{	// rotate the Mueller matrix of the beam to appropriate coordinate system
+
+			const float &x = dir.c_x;
+			const float &y = dir.c_y;
+
+			double tmp = y*y;
+
+			tmp = acos(x/sqrt(x*x+tmp));
+
+			if (y < 0)
+			{
+				tmp = M_2PI-tmp;
+			}
+
+			tmp *= -2.0;
+			RightRotateMueller(M, cos(tmp), sin(tmp));
+		}
+	}
 }
 
 void ParticleProxy::SetTracing(const Point3f &incidentDir, int reflNum,
@@ -158,7 +169,52 @@ void ParticleProxy::SetTracing(const Point3f &incidentDir, int reflNum,
 	}
 }
 
-void ParticleProxy::Trace(const Angle &angle, int reflNum)
+
+void ParticleProxy::RotateStates(const Angle &angle, Beam &beam)
+{
+	for (BeamState &state : beam.states)
+	{
+		vector<Point3f> statePol, resPol;
+
+		for (int i = 0; i < state.size; ++i)
+		{
+			statePol.push_back(state.arr[i]);
+		}
+
+		particle->RotatePointsGlobal(angle.beta, angle.gamma, angle.alpha,
+									 statePol, resPol);
+
+		state.Clear();
+
+		for (Point3f &p : resPol)
+		{
+			state.Add(p);
+		}
+	}
+}
+
+void ParticleProxy::SetBeamInfo(int beamNumber, Beam &beam, BeamInfo &info)
+{
+	info.beam = beam;
+	info.area = tracing->BeamCrossSection(beam)/**sinBeta*/;
+
+	double phi, theta;
+	beam.GetSpherical(phi, theta);
+	info.thetaDeg = 180 - RadToDeg(theta);
+	info.phiDeg = RadToDeg(phi);
+
+	info.track = RecoverTrack(beam.id, beam.level)+":";
+	info.number = beamNumber;
+
+	matrix M = Mueller(beam.J);
+	RotateMuller(beam.direction, M);
+	info.M   << M[0][0] << M[0][1] << M[0][2] << M[0][3]
+			 << M[1][0] << M[1][1] << M[1][2] << M[1][3]
+			 << M[2][0] << M[2][1] << M[2][2] << M[2][3]
+			 << M[3][0] << M[3][1] << M[3][2] << M[3][3];
+}
+
+void ParticleProxy::Trace(const Angle &angle, const Angle &viewAngle, int reflNum)
 {
 	beamData.clear();
 
@@ -168,49 +224,20 @@ void ParticleProxy::Trace(const Angle &angle, int reflNum)
 	SetTracing(incidentDir, reflNum, polarizationBasis);
 
 	vector<Beam> outBeams;
-	double betaR = DegToRad(angle.beta);
-	double gammaR = DegToRad(angle.gamma);
-	tracing->SplitBeamByParticle(betaR, gammaR, outBeams, DegToRad(angle.alpha));
+	tracing->SplitBeamByParticle(angle.beta, angle.gamma, outBeams, angle.alpha);
 
 	int count = 0;
 
 	for (Beam &beam : outBeams)
 	{
-		BeamInfo info;
-		info.beam = beam;
-
 		beam.RotateSpherical(-incidentDir, polarizationBasis);
 
-		double cross = tracing->BeamCrossSection(beam);
-		info.area = cross/**sinBeta*/;
-		matrix M = Mueller(beam.J);
+//		RotateStates(viewAngle, beam);
 
-		double phi, theta;
-		beam.GetSpherical(phi, theta);
-
-		const float &z = beam.direction.c_z;
-
-		if (z >= 1-DBL_EPSILON && z <= DBL_EPSILON-1)
-		{
-			const float &y = beam.direction.c_y;
-
-			if (y*y > DBL_EPSILON)
-			{	// rotate the Mueller matrix of the beam to appropriate coordinate system
-				RotateMuller(beam.direction, M);
-			}
-		}
-
-		info.thetaDeg = 180 - RadToDeg(theta);
-		info.phiDeg = RadToDeg(phi);
-		info.track = RecoverTrack(beam.id, beam.level)+":";
-		info.number = ++count;
+		BeamInfo info;
+		SetBeamInfo(++count, beam, info);
 
 		QString dir = QString("%1, %2").arg(info.phiDeg).arg(info.thetaDeg);
-
-		info.M   << M[0][0] << M[0][1] << M[0][2] << M[0][3]
-				 << M[1][0] << M[1][1] << M[1][2] << M[1][3]
-				 << M[2][0] << M[2][1] << M[2][2] << M[2][3]
-				 << M[3][0] << M[3][1] << M[3][2] << M[3][3];
 
 		if (beamData.contains(dir))
 		{
@@ -234,15 +261,14 @@ void ParticleProxy::TranslateCoordinates(QPolygonF &pol)
 	}
 }
 
-QPolygonF ParticleProxy::Rotate(const Angle &rotAngle, const Angle &viewAngle)
+void ParticleProxy::RotateParticle(const Angle &rotAngle, const Angle &viewAngle)
 {
-	particle->Rotate(rotAngle.beta /*+ viewAngle.beta*/,
-					 rotAngle.gamma /*+ viewAngle.gamma*/,
-					 rotAngle.alpha /*+ viewAngle.alpha*/);
-
+	particle->Rotate(rotAngle.beta, rotAngle.gamma, rotAngle.alpha);
 	particle->RotateGlobal(viewAngle.beta, viewAngle.gamma, viewAngle.alpha);
-//	particle->Fix();
+}
 
+QVector<QPointF> ParticleProxy::RotateAxes(const Angle &viewAngle)
+{
 	vector<Point3f> resAxes;
 	particle->RotatePointsGlobal(viewAngle.beta, viewAngle.gamma, viewAngle.alpha,
 								 vector<Point3f>{axes.x, axes.y, axes.z}, resAxes);
@@ -280,6 +306,36 @@ QString ParticleProxy::GetAdditionalParticleParam(const QString &type) const
 	}
 
 	return param;
+}
+
+void ParticleProxy::GetTrack(int beamNumber, const Angle &viewAngle,
+							 QVector<NumberedFacet> &track)
+{
+	BeamInfo info;
+	GetBeamByNumber(beamNumber, info);
+
+	RotateStates(viewAngle, info.beam);
+
+	for (BeamState &state : info.beam.states)
+	{
+		QPolygonF pol;
+
+		for (int j = 0; j < state.size; ++j)
+		{
+			Point3f &p = state.arr[j];
+
+//			vector<Point3f> resP;
+//			resP.push_back(p);
+//			particle->RotatePointsGlobal(viewAngle.beta, viewAngle.gamma, viewAngle.alpha,
+//										 vector<Point3f>{p}, resP);
+
+//			pol.append(QPointF(resP.at(0).c_x, resP.at(0).c_y));
+			pol.append(QPointF(p.c_x, p.c_y));
+		}
+
+		TranslateCoordinates(pol);
+		track.append(NumberedFacet{state.facetID, pol});
+	}
 }
 
 QString ParticleProxy::GetBeamDataString()
@@ -364,15 +420,28 @@ void ParticleProxy::GetBeamByNumber(int number, BeamInfo &binfo)
 	}
 }
 
-void ParticleProxy::GetVisibleFacets(QVector<NumberedFacet> &facets)
+void ParticleProxy::GetVisibleFacets(QVector<NumberedFacet> &visfacets,
+									 QVector<NumberedFacet> &invisFacets)
 {
 	Point3f incidentDir(0, 0, -1);
 	Point3f polarizationBasis(0, 1, 0);
 
+	Point3f point = incidentDir * particle->GetMainSize();
+	incidentDir.d_param = DotProduct(point, incidentDir);
+
 	SetTracing(incidentDir, 0, polarizationBasis);
 
 	IntArray facetIDs;
+
+//	for (int i = 0; i < particle->facetNum; ++i)
+//	{
+//		facetIDs.Add(i);
+//	}
+
 	tracing->SelectVisibleFacetsForWavefront(facetIDs);
+//	tracing->SortFacets(incidentDir, facetIDs);
+//	tracing->SortFacets_2(incidentDir, Location::Out, facetIDs);
+//	tracing->SortFacets_3(incidentDir, Location::Out, facetIDs);
 
 	for (int i = facetIDs.size-1; i >= 0; --i)
 //	for (int i = 0; i < facetIDs.size; ++i)
@@ -388,8 +457,27 @@ void ParticleProxy::GetVisibleFacets(QVector<NumberedFacet> &facets)
 		}
 
 		TranslateCoordinates(pol);
-		facets.append(NumberedFacet{id, pol});
+		visfacets.append(NumberedFacet{id, pol});
 	}
+
+
+//	for (int i = 0; i < particle->facetNum; ++i)
+//	{
+//		if (!facetIDs.Consist(i))
+//		{
+//			Facet &facet = particle->facets[i];
+//			QPolygonF pol;
+
+//			for (int j = 0; j < facet.size; ++j)
+//			{
+//				Point3f &p = facet.arr[j];
+//				pol.append(QPointF(p.c_x, p.c_y));
+//			}
+
+//			TranslateCoordinates(pol);
+//			invisFacets.append(NumberedFacet{i, pol});
+//		}
+//	}
 }
 
 // BUG: не всегда правильно объединяет, пофиксить

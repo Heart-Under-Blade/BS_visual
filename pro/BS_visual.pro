@@ -4,7 +4,7 @@
 #
 #-------------------------------------------------
 
-QT       += core gui charts datavisualization opengl
+QT       += core gui charts opengl
 TEMPLATE = app
 CONFIG += c++11
 

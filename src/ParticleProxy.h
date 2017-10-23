@@ -69,14 +69,17 @@ public:
 
 	void SetParticle(const QString &type, double refrIndex, double height,
 					 double diameter, double additional = 1.0);
-	void Trace(const Angle &angle, int reflNum);
+	void Trace(const Angle &angle, const Angle &viewAngle, int reflNum);
 	void Clear();
 
-	QPolygonF Rotate(const Angle &rotAngle, const Angle &viewAngle);
+	void RotateParticle(const Angle &rotAngle, const Angle &viewAngle);
+	QVector<QPointF> RotateAxes(const Angle &viewAngle);
 
 	QStringList GetParticleTypes() const;
 	QString GetAdditionalParticleParam(const QString &type) const;
 
+	void GetTrack(int beamNumber, const Angle &viewAngle,
+				  QVector<NumberedFacet> &track);
 	QString GetBeamDataString();
 	QString GetBeamDataString(const QString &searchLine);
 	BeamInfo &GetBeamByKeys(const QString &trackKey, const QString &beamKey);
@@ -85,12 +88,13 @@ public:
 	const TrackMap &GetTrackMap() const;
 
 	Particle *GetParticle() const;
-	void GetVisibleFacets(QVector<NumberedFacet> &facets);
+	void GetVisibleFacets(QVector<NumberedFacet> &visfacets, QVector<NumberedFacet> &invisFacets);
 
 	void SetTracing(const Point3f &incidentDir, int reflNum,
 					const Point3f &polarizationBasis);
 
 	QString RecoverTrack(long long id, int level);
+	void TranslateCoordinates(QPolygonF &pol);
 
 private:
 
@@ -114,5 +118,6 @@ private:
 
 private:
 	QPolygonF Union(QVector<QPolygonF> polygons, double epsilon);
-	void TranslateCoordinates(QPolygonF &pol);
+	void RotateStates(const Angle &angle, Beam &beam);
+	void SetBeamInfo(int beamNumber, Beam &beam, BeamInfo &info);
 };

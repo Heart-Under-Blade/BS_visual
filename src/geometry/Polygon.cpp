@@ -136,3 +136,13 @@ Point3f Polygon::Normal() const
 
 	return normal;
 }
+
+void Polygon::Add(const Point3f &p)
+{
+	arr[size++] = p;
+}
+
+void Polygon::Clear()
+{
+	size = 0;
+}

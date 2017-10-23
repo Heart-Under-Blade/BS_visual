@@ -16,6 +16,8 @@ using namespace std;
 
 #define NORM_CEIL	FLT_EPSILON + 1
 
+struct FacetInfo { int num; int minID; int maxID; double min; double max; };
+
 Tracing::Tracing(Particle *particle, const Point3f &incidentDir, bool isOpticalPath,
 				 const Point3f &polarizationBasis, int interReflectionNumber)
 {
@@ -93,9 +95,15 @@ void Tracing::SetBeamID(Beam &beam)
 #endif
 }
 
-void Tracing::PushBeamToTree(Beam &beam, int facetId, int level, Location location)
+void Tracing::PushBeamToTree(Beam &beam, int facetID, int level, Location location)
 {
-	beam.SetTracingParams(facetId, level, location);
+	BeamState state;
+	state.fromPolygon(beam);
+	state.loc = (Location)(!((bool)location));
+	state.facetID = facetID;
+	beam.states.push_back(state);
+
+	beam.SetTracingParams(facetID, level, location);
 	PushBeamToTree(beam);
 }
 
@@ -206,7 +214,6 @@ double Tracing::CalcMinDistanceToFacet(const Polygon &facet, const Point3f &beam
 	return dist;
 }
 
-
 /* TODO: придумать более надёжную сортировку по близости
  * (как вариант определять, что одна грань затеняют другую по мин. и макс.
  * удалённым вершинам, типа: "//" )*/
@@ -285,14 +292,16 @@ void Tracing::SortFacets(const Point3f &beamDir, IntArray &facetIds)
 	}
 }
 
+
+/// TODO: repair or remove
 void Tracing::SortFacets_2(const Point3f &beamDir, Location location,
-						   IntArray &facetIds)
+						   IntArray &facetIDs)
 {
 	std::list<int> sortedIDs;
 
-	for (int i = 0; i < facetIds.size; ++i)
+	for (int i = 0; i < facetIDs.size; ++i)
 	{
-		sortedIDs.push_back(facetIds.arr[i]);
+		sortedIDs.push_back(facetIDs.arr[i]);
 	}
 
 	int loc = (location == Location::In) ? 0 : 1;
@@ -331,9 +340,90 @@ void Tracing::SortFacets_2(const Point3f &beamDir, Location location,
 
 	for (int &val : sortedIDs)
 	{
-		facetIds.arr[i++] = val;
+		facetIDs.arr[i++] = val;
 	}
 }
+
+void Tracing::MinMaxOfFacet(int id, const Point3f &beamDir,
+							FacetInfo &info)
+{
+	info.num = id;
+	info.min = FLT_MAX, info.max = 0;
+	Polygon facet = m_facets[id];
+	const Point3f *pol = facet.arr;
+
+	for (int i = 0; i < facet.size; ++i)
+	{
+		// measure dist
+		Point3f point;
+		ProjectPointToFacet(pol[i], -beamDir, beamDir, point);
+		double dist = sqrt(Norm(point - pol[i]));
+
+		if (dist < info.min) // choose minimum with previews
+		{
+			info.min = dist;
+			info.minID = i;
+		}
+
+		if (dist > info.max)
+		{
+			info.max = dist;
+			info.maxID = i;
+		}
+	}
+}
+
+/// TODO: repair or remove
+void Tracing::SortFacets_3(const Point3f &beamDir, Location location,
+						   IntArray &facetIDs)
+{
+	std::list<FacetInfo> sortedIDs;
+
+	for (int i = 0; i < facetIDs.size; ++i)
+	{
+		int id = facetIDs.arr[i];
+		FacetInfo info;
+		MinMaxOfFacet(id, beamDir, info);
+		sortedIDs.push_back(info);
+	}
+
+	int loc = (location == Location::In) ? 0 : 1;
+
+	auto Overlays = [&](FacetInfo a, FacetInfo b)
+	{
+		const Point3f &n = m_facets[b.num].normal[loc];
+
+		if (a.max < b.min)
+		{
+			return true;
+		}
+		else if (a.min > b.max)
+		{
+			return false;
+		}
+		else /*if (a.max > b.min && a.max < b.max)*/
+		{
+			Point3f &maxA = m_facets[a.num].arr[a.maxID];
+			Point3f projB;
+			ProjectPointToFacet(maxA, -beamDir, n, projB);
+
+			Point3f vb = projB-maxA;
+			double cosP = DotProduct(beamDir, vb);
+
+			return cosP > EPS_COS_90;
+		}
+	};
+
+	sortedIDs.sort(Overlays);
+
+	int i = 0;
+
+	for (FacetInfo &val : sortedIDs)
+	{
+		facetIDs.arr[i++] = val.num;
+	}
+}
+
 
 void Tracing::SelectVisibleFacetsForWavefront(IntArray &facetIDs)
 {

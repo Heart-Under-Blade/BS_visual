@@ -1,13 +1,17 @@
 #pragma once
 
 #include <QMainWindow>
+#include <QDialog>
 #include <QtCharts/QScatterSeries>
+#include <QtCharts/QAbstractAxis>
+#include <QtCharts/QValueAxis>
+#include <QtCharts/QPolarChart>
 #include <QChartView>
+
+#include "ParticleProxy.h"
 
 QT_CHARTS_USE_NAMESPACE
 
-class Angle;
-class ParticleProxy;
 class BeamItemModel;
 class ParticleView;
 
@@ -40,12 +44,21 @@ private:
 	ParticleProxy *p_proxy;
 	BeamItemModel *model;
 	QChartView *chartView;
-	QScatterSeries *angleSeries;
+
 	ParticleView *particleView;
 	int precision;
 	QMap<QString, QVariant> state;
 	bool hasAdditional;
 	double coordinateOffset = 90;
+	int beamNumber;
+	bool isBeamSelected;
+
+	QVector<QColor> colors;
+
+	QPolarChart *chart;
+	QValueAxis *phiAxis;
+	QValueAxis *thetaAxis;
+	QWidget *widget;
 
 private:
 	void FillParticleTypes();
@@ -61,4 +74,5 @@ private:
 	void WriteState();
 	void ConnectWidgets();
 	void SetParticleView();
+	void FillResultBeamData(const BeamInfo &info);
 };

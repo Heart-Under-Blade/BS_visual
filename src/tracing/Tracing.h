@@ -30,6 +30,8 @@ struct BeamTree
 //	}
 };
 
+class FacetInfo;
+
 class Tracing // REF: поменять название на ~Splitter
 {
 public:
@@ -69,6 +71,7 @@ public:
 
 	void SortFacets(const Point3f &beamDir, IntArray &facetIds); ///< use 'Fast sort' algorithm
 	void SortFacets_2(const Point3f &beamDir, Location location, IntArray &facetIds);
+	void SortFacets_3(const Point3f &beamDir, Location location, IntArray &facetIDs);
 
 	void FindVisibleFacetsForWavefront(IntArray &facetIDs);
 	void SelectVisibleFacetsForWavefront(IntArray &facetIDs);
@@ -120,7 +123,7 @@ protected:
 
 	void CalcOpticalPath_initial(Beam &inBeam, Beam &outBeam);
 
-	void PushBeamToTree(Beam &beam, int facetId, int level, Location location);
+	void PushBeamToTree(Beam &beam, int facetID, int level, Location location);
 	void PushBeamToTree(Beam &beam, int facetId, int level);
 	void PushBeamToTree(Beam &beam);
 
@@ -144,4 +147,5 @@ private:
 
 	bool ProjectToFacetPlane(const Polygon &polygon, const Point3f &dir,
 							 const Point3f &normal, __m128 *_projection) const;
+	void MinMaxOfFacet(int id, const Point3f &beamDir, FacetInfo &info);
 };

@@ -9,6 +9,12 @@
 ParticleView::ParticleView(QWidget *parent)
 	: QGraphicsView(parent)
 {
+	mainPen.setColor(Qt::black);
+
+	invisPen.setColor(Qt::gray);
+	invisPen.setStyle(Qt::DashLine);
+	invisPen.setDashPattern(QVector<qreal>{5, 10});
+
 	zoomFactor = 0.1;
 	scene = new QGraphicsScene(this);
 	setScene(scene);
@@ -19,31 +25,95 @@ ParticleView::~ParticleView()
 {
 }
 
-void ParticleView::DrawParticle(const QVector<NumberedFacet> &facets, bool isShowNumbers)
+void ParticleView::DrawTrack(const QVector<NumberedFacet> &track)
 {
-//	for (int i = facets.size()-1; i >= 0; --i)
-	for (int i = 0; i < facets.size(); ++i)
+	if (track.isEmpty())
 	{
-		scene->addPolygon(facets[i].pol, QPen(Qt::blue), QBrush(QColor(Qt::white)));
+		return;
+	}
 
-		if (isShowNumbers)
-		{
-			QPointF center = facets[i].pol.boundingRect().center();
-			DrawFacetNumber(center, facets[i].num);
-		}
+	QPen pen(Qt::red);
+	QPen pen2 = invisPen;
+	pen2.setColor(Qt::red);
+
+	// polygons
+	for (const NumberedFacet &pol : track)
+	{
+		scene->addPolygon(pol.pol, pen, QBrush(Qt::green));
+	}
+
+	QPointF c1 = CenterOfPolygon(track.at(0).pol);
+	QPointF c2 = CenterOfPolygon(track.at(1).pol);
+	scene->addLine(c1.x(), c1.y(), c2.x(), c2.y(), pen);
+	scene->addEllipse(c1.x()-2, c1.y()-2, 4, 4, pen, QBrush(Qt::green));
+
+	// lines
+	for (int i = 2; i < track.size()-1; ++i)
+	{
+		c1 = c2;
+		c2 = CenterOfPolygon(track.at(i).pol);
+		scene->addLine(c1.x(), c1.y(), c2.x(), c2.y(), pen2);
+		scene->addEllipse(c1.x()-2, c1.y()-2, 4, 4, pen, QBrush(Qt::green));
+	}
+
+	c1 = CenterOfPolygon(track.at(track.size()-2).pol);
+	c2 = CenterOfPolygon(track.at(track.size()-1).pol);
+	scene->addLine(c1.x(), c1.y(), c2.x(), c2.y(), pen);
+	scene->addEllipse(c2.x()-2, c2.y()-2, 4, 4, pen, QBrush(Qt::green));
+
+	// numbers
+	for (int i = 1; i < track.size()-1; ++i)
+	{
+		DrawFacetNumber(track.at(i), mainPen.color());
 	}
 }
 
-void ParticleView::DrawFacetNumber(const QPointF &pos, int num)
+void ParticleView::DrawParticle(const VisualParticle &particle,
+								bool drawNumbers, bool drawAxes)
 {
+	scene->clear();
+//	QBrush brush(QColor(QRgba64::fromRgba(0, 0, 255, 255/(1/sqrt(refrIndex*4)))));
+
+	DrawFacets(particle.invisibleFacets, drawNumbers, invisPen);
+
+	DrawFacets(particle.visibleFacets, drawNumbers,
+			   QPen(Qt::black), QBrush(Qt::cyan));
+
+	DrawTrack(particle.track);
+
+	if (drawAxes)
+	{
+		DrawAxes(particle.axes);
+	}
+}
+
+QPointF ParticleView::CenterOfPolygon(const QPolygonF &pol)
+{
+	QPointF center;
+
+	foreach (QPointF p, pol)
+	{
+		center.setX(center.x() + p.x());
+		center.setY(center.y() + p.y());
+	}
+
+	center /= pol.size();
+	return center;
+}
+
+void ParticleView::DrawFacetNumber(const NumberedFacet &facet, const QColor &color)
+{
+	QPointF center = CenterOfPolygon(facet.pol);
+
 	QFont font;
 	font.setPointSize(5);
-	QString numText = QString::number(num);
+	QString numText = QString::number(facet.num);
 	QGraphicsTextItem *facetNumber = scene->addText(numText, font);
 
+	facetNumber->setDefaultTextColor(color);
 	QPointF textCenter = facetNumber->boundingRect().center();
-	double x = pos.x() - textCenter.x();
-	double y = pos.y() - textCenter.y();
+	double x = center.x() - textCenter.x();
+	double y = center.y() - textCenter.y();
 	facetNumber->setPos(x, y);
 }
 
@@ -86,6 +156,20 @@ void ParticleView::DrawAxes(const QVector<QPointF> &axes)
 	scene->addEllipse(-size, -size, size*2, size*2, QPen(Qt::red));
 }
 
+void ParticleView::DrawFacets(const QVector<NumberedFacet> &facets, bool drawNumbers,
+							  const QPen &pen, const QBrush &brush)
+{
+	for (int i = 0; i < facets.size(); ++i)
+	{
+		scene->addPolygon(facets[i].pol, pen, brush);
+
+		if (drawNumbers)
+		{
+			DrawFacetNumber(facets[i], pen.color());
+		}
+	}
+}
+
 void ParticleView::Redraw()
 {
 }
@@ -93,7 +177,7 @@ void ParticleView::Redraw()
 void ParticleView::wheelEvent(QWheelEvent *event)
 {
 	QPoint wheel = event->angleDelta();
-//    qDebug() << wheel;
+//  qDebug() << wheel;
 
 	double zoomIn = 1 + zoomFactor;
 	double zoomOut = 1 - zoomFactor;

@@ -35,6 +35,21 @@ void TracingConcave::SplitBeamByParticle(double beta, double gamma,
 	TraceSecondaryBeams(scaterredBeams);
 }
 
+void TracingConcave::AddStartBeamState(Beam &beam, int facetID)
+{
+	beam.states.clear();
+	BeamState state;
+
+	Point3f p;
+	Point3f c = beam.Center();
+	ProjectPointToFacet(c, -m_incidentDir, m_incidentDir, p);
+	state.Add(p);
+
+	state.facetID = facetID;
+	state.loc = Location::Out;
+	beam.states.push_back(state);
+}
+
 void TracingConcave::PushBeamsToTree(int facetID, const PolygonArray &polygons,
 									 Beam &inBeam, Beam &outBeam)
 {
@@ -50,7 +65,10 @@ void TracingConcave::PushBeamsToTree(int facetID, const PolygonArray &polygons,
 		// OPT: дублирует одиночный вызов в пред. ф-ции
 		CalcOpticalPath_initial(inBeam, outBeam);
 
+		AddStartBeamState(inBeam, facetID);
 		PushBeamToTree( inBeam, facetID, 0, Location::In );
+
+		AddStartBeamState(outBeam, facetID);
 		PushBeamToTree(outBeam, facetID, 0, Location::Out);
 
 #ifdef _CHECK_ENERGY_BALANCE
@@ -157,6 +175,21 @@ void TracingConcave::CatchExternalBeam(const Beam &beam, std::vector<Beam> &scat
 	for (int i = 0; i < resSize; ++i)
 	{
 		tmp.SetPolygon(resultBeams[i]);
+
+		BeamState state;
+
+		Point3f dir = -tmp.direction;
+		dir.d_param = DotProduct(dir*100, dir);
+
+		Point3f p;
+		Point3f c = beam.Center();
+		ProjectPointToFacet(c, dir, -dir, p);
+		state.Add(p);
+
+		state.loc = Location::Out;
+		state.facetID = tmp.lastFacetID;
+		tmp.states.push_back(state);
+
 		scatteredBeams.push_back(tmp);
 	}
 }
@@ -235,9 +268,11 @@ void TracingConcave::PushBeamsToTree(const Beam &beam, int facetID, bool hasOutB
 #ifdef _TRACK_ALLOW
 		outBeam.id = beam.id;
 #endif
+		outBeam.states = beam.states;
 		PushBeamToTree(outBeam, facetID, beam.level+1, Location::Out);
 	}
 
+	inBeam.states = beam.states;
 	PushBeamToTree(inBeam, facetID, beam.level+1, Location::In);
 }
 

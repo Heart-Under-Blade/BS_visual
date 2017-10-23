@@ -24,4 +24,25 @@ public:
 	double Area() const;
 	Point3f Center() const;
 	Point3f Normal() const;
+
+	void Add(const Point3f &p);
+	void Clear();
+};
+
+struct BeamState : public Polygon
+{
+	BeamState() : Polygon() {}
+
+	void fromPolygon(const Polygon &pol)
+	{
+		size = pol.size;
+
+		for (int i = 0; i < pol.size; ++i)
+		{
+			arr[i] = pol.arr[i];
+		}
+	}
+
+	int facetID;
+	Location loc;
 };

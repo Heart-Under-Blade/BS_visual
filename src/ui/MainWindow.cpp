@@ -2,13 +2,10 @@
 #include "ui_MainWindow.h"
 
 #include "BeamItemModel.h"
-#include "ParticleProxy.h"
 #include "ParticleView.h"
 
 #include <QDebug>
-#include <QtCharts/QAbstractAxis>
-#include <QtCharts/QValueAxis>
-#include <QtCharts/QPolarChart>
+#include <QLegendMarker>
 
 #ifdef _DEBUG // DEB
 #include <iostream>
@@ -20,6 +17,7 @@ MainWindow::MainWindow(QWidget *parent) :
 {
 	ui->setupUi(this);
 
+	isBeamSelected = false;
 	model = nullptr;
 	precision = 4;
 	p_proxy = new ParticleProxy();
@@ -86,6 +84,14 @@ void MainWindow::SetParticleView()
 	ui->widget_particleView->setLayout(new QGridLayout());
 	QGridLayout *lo = (QGridLayout*)ui->widget_particleView->layout();
 	lo->addWidget(particleView, 6, 0, 1, 4);
+
+	widget = new QWidget();
+	widget->setLayout(new QGridLayout());
+	QGridLayout *go = (QGridLayout*)widget->layout();
+	go->addWidget(ui->groupBox_particlePreivew, 6, 0, 1, 4);
+	widget->resize(800, 600);
+	widget->setFocus();
+	widget->show();
 }
 
 void MainWindow::WriteState()
@@ -158,21 +164,27 @@ void MainWindow::DrawParticle(double)
 
 void MainWindow::DrawParticle()
 {
-	particleView->scene->clear();
+	bool drawNumbers = ui->checkBox_numbers->isChecked();
+	bool drawAxes = ui->checkBox_axes->isChecked();
+
 	SetParticle();
 
 	Angle rotAngle = GetRotateAngle();
 	Angle viewAngle = GetViewAngle();
-	QPolygonF axes = p_proxy->Rotate(rotAngle, viewAngle);
+	p_proxy->RotateParticle(rotAngle, viewAngle);
 
-	QVector<NumberedFacet> facets;
-	p_proxy->GetVisibleFacets(facets);
-	particleView->DrawParticle(facets, ui->checkBox_numbers->isChecked());
+	VisualParticle particle;
+	p_proxy->GetVisibleFacets(particle.visibleFacets, particle.invisibleFacets);
+	particle.refrIndex = ui->doubleSpinBox_refrIndex->value();
+	particle.axes = p_proxy->RotateAxes(viewAngle);
 
-	if (ui->checkBox_axes->isChecked())
+	if (isBeamSelected)
 	{
-		particleView->DrawAxes(axes);
+		qDebug () << viewAngle.beta << viewAngle.alpha << viewAngle.gamma;
+		p_proxy->GetTrack(beamNumber, viewAngle, particle.track);
 	}
+
+	particleView->DrawParticle(particle, drawNumbers, drawAxes);
 }
 
 void MainWindow::FillParticleTypes()
@@ -212,18 +224,69 @@ void MainWindow::on_comboBox_types_currentIndexChanged(int)
 
 void MainWindow::DrawBeamAnglePoints()
 {
-	angleSeries->clear();
+	QVector<QPair<QPointF, int>> angles;
+	int max = 0, min = INT_MAX;
+
 	TrackMap trackMap = p_proxy->GetTrackMap();
 
 	foreach (QString tKey, trackMap.keys())
 	{
 		BeamData data = trackMap.value(tKey);
+		BeamInfo info = data.value(data.keys().at(0));
 
-		foreach (QString dKey, data.keys())
+		QPair<QPointF, int> angleData;
+		angleData.first = QPointF(info.phiDeg, info.thetaDeg);
+		angleData.second = data.size();
+		angles.append(angleData);
+
+		if (angleData.second < min)
 		{
-			BeamInfo info = data.value(dKey);
-			angleSeries->append(info.phiDeg, info.thetaDeg);
+			min = angleData.second;
 		}
+
+		if (angleData.second > max)
+		{
+			max = angleData.second;
+		}
+	}
+
+	float coef = (float)(max - min)/colors.size();
+
+	QVector<QPair<int, int>> ranges;
+
+	QPair<int, int> range;
+	range.first = min;
+	range.second = min + lround(coef);
+	ranges.append(range);
+
+	for (int i = 1; i < colors.size(); ++i)
+	{
+		range.first = ranges.last().second + 1;
+		range.second = min + lround(coef*(i+1));
+		ranges.append(range);
+	}
+
+	for (int i = 0; i < angles.size(); ++i)
+	{
+		int beamCount = angles[i].second;
+		int id = 0;
+
+		for (int j = 0; j < ranges.size(); ++j)
+		{
+			if (beamCount >= ranges[j].first
+					&& beamCount <= ranges[j].second)
+			{
+				id = j;
+			}
+		}
+
+		QScatterSeries *series = (QScatterSeries*)chart->series().at(id);
+
+		QPair<int, int> r = ranges[id];
+		series->setName(QString("%1-%2").arg(r.first).arg(r.second));
+
+		QPointF a = angles[i].first;
+		series->append(a.x(), a.y());
 	}
 }
 
@@ -280,9 +343,10 @@ void MainWindow::on_pushButton_clicked()
 	SetParticle();
 
 	Angle angle = GetRotateAngle();
+	Angle viewAngle = GetViewAngle();
 	int reflNum = ui->spinBox_inter->value();
 
-	p_proxy->Trace(angle, reflNum);
+	p_proxy->Trace(angle, viewAngle, reflNum);
 
 	SetTrackTree();
 	DrawBeamAnglePoints();
@@ -290,11 +354,18 @@ void MainWindow::on_pushButton_clicked()
 
 void MainWindow::SetAngleChart()
 {
-	QPolarChart *chart = new QPolarChart();
+	colors.append(QColor(0, 0, 255));
+	colors.append(QColor(109, 0, 255));
+	colors.append(QColor(164, 0, 255));
+	colors.append(QColor(255, 0, 255));
+	colors.append(QColor(255, 0, 144));
+	colors.append(QColor(255, 0, 0));
+
+	chart = new QPolarChart();
 
 //	chart->setTitle("Use arrow keys to scroll, +/- to zoom, and space to switch chart type.");
 
-	QValueAxis *phiAxis = new QValueAxis();
+	phiAxis = new QValueAxis();
 	phiAxis->setTickCount(9); // First and last ticks are co-located on 0/360 angle.
 	phiAxis->setLabelFormat("%.1f");
 	phiAxis->setShadesVisible(true);
@@ -302,7 +373,7 @@ void MainWindow::SetAngleChart()
 	phiAxis->setReverse(true);
 	chart->addAxis(phiAxis, QPolarChart::PolarOrientationAngular);
 
-	QValueAxis *thetaAxis = new QValueAxis();
+	thetaAxis = new QValueAxis();
 	thetaAxis->setTickCount(7);
 	thetaAxis->setLabelFormat("%d");
 	chart->addAxis(thetaAxis, QPolarChart::PolarOrientationRadial);
@@ -310,60 +381,75 @@ void MainWindow::SetAngleChart()
 	thetaAxis->setRange(0, 180);
 	phiAxis->setRange(0, 360);
 
-	angleSeries = new QScatterSeries();
-	angleSeries->setMarkerShape(QScatterSeries::MarkerShapeCircle);
-	angleSeries->setMarkerSize(10);
+	foreach (const QColor &color, colors)
+	{
+		QScatterSeries *angleSeries = new QScatterSeries();
+		angleSeries->setMarkerShape(QScatterSeries::MarkerShapeCircle);
+		angleSeries->setMarkerSize(10);
+		angleSeries->setColor(color);
 
-	chart->addSeries(angleSeries);
-	angleSeries->attachAxis(phiAxis);
-	angleSeries->attachAxis(thetaAxis);
+		chart->addSeries(angleSeries);
+		angleSeries->attachAxis(phiAxis);
+		angleSeries->attachAxis(thetaAxis);
+	}
 
 	chartView = new QChartView();
 	chartView->setChart(chart);
+//	chart->legend()->setVisible(false);
 //	chartView->setRenderHint(QPainter::Antialiasing);
 
 	ui->widget_chart->setLayout(new QGridLayout());
 	ui->widget_chart->layout()->addWidget(chartView);
 }
 
+void MainWindow::FillResultBeamData(const BeamInfo &info)
+{
+	ui->label_track->setText(info.track);
+	ui->label_area->setText(QString::number(info.area, 'g', precision));
+	ui->label_optPath->setText(QString::number(info.beam.opticalPath, 'g', precision));
+
+	auto M = info.M;
+
+	ui->label_m11->setText(QString::number(M.at(0), 'g', precision));
+	ui->label_m12->setText(QString::number(M.at(1), 'g', precision));
+	ui->label_m13->setText(QString::number(M.at(2), 'g', precision));
+	ui->label_m14->setText(QString::number(M.at(3), 'g', precision));
+
+	ui->label_m21->setText(QString::number(M.at(4), 'g', precision));
+	ui->label_m22->setText(QString::number(M.at(5), 'g', precision));
+	ui->label_m23->setText(QString::number(M.at(6), 'g', precision));
+	ui->label_m24->setText(QString::number(M.at(7), 'g', precision));
+
+	ui->label_m31->setText(QString::number(M.at(8), 'g', precision));
+	ui->label_m32->setText(QString::number(M.at(9), 'g', precision));
+	ui->label_m33->setText(QString::number(M.at(10), 'g', precision));
+	ui->label_m34->setText(QString::number(M.at(11), 'g', precision));
+
+	ui->label_m41->setText(QString::number(M.at(12), 'g', precision));
+	ui->label_m42->setText(QString::number(M.at(13), 'g', precision));
+	ui->label_m43->setText(QString::number(M.at(14), 'g', precision));
+	ui->label_m44->setText(QString::number(M.at(15), 'g', precision));
+}
+
 void MainWindow::on_treeView_tracks_clicked(const QModelIndex &index)
 {
 	if (model->hasChildren(index)) // is not root element
 	{
+		isBeamSelected = false;
 		return;
 	}
 
 	QModelIndex secondColIndex = model->index(index.row(), 1, index.parent());
 	QVariant itemData = model->data(secondColIndex, Qt::DisplayRole);
 
-	int beamNumber = itemData.toString().toInt();
+	beamNumber = itemData.toString().toInt();
+	isBeamSelected = true;
 
 	BeamInfo info;
 	p_proxy->GetBeamByNumber(beamNumber, info);
+	FillResultBeamData(info);
 
-	ui->label_track->setText(info.track);
-	ui->label_area->setText(QString::number(info.area, 'g', precision));
-	ui->label_optPath->setText(QString::number(info.beam.opticalPath, 'g', precision));
-
-	ui->label_m11->setText(QString::number(info.M.at(0), 'g', precision));
-	ui->label_m12->setText(QString::number(info.M.at(1), 'g', precision));
-	ui->label_m13->setText(QString::number(info.M.at(2), 'g', precision));
-	ui->label_m14->setText(QString::number(info.M.at(3), 'g', precision));
-
-	ui->label_m21->setText(QString::number(info.M.at(4), 'g', precision));
-	ui->label_m22->setText(QString::number(info.M.at(5), 'g', precision));
-	ui->label_m23->setText(QString::number(info.M.at(6), 'g', precision));
-	ui->label_m24->setText(QString::number(info.M.at(7), 'g', precision));
-
-	ui->label_m31->setText(QString::number(info.M.at(8), 'g', precision));
-	ui->label_m32->setText(QString::number(info.M.at(9), 'g', precision));
-	ui->label_m33->setText(QString::number(info.M.at(10), 'g', precision));
-	ui->label_m34->setText(QString::number(info.M.at(11), 'g', precision));
-
-	ui->label_m41->setText(QString::number(info.M.at(12), 'g', precision));
-	ui->label_m42->setText(QString::number(info.M.at(13), 'g', precision));
-	ui->label_m43->setText(QString::number(info.M.at(14), 'g', precision));
-	ui->label_m44->setText(QString::number(info.M.at(15), 'g', precision));
+	DrawParticle();
 }
 
 void MainWindow::on_lineEdit_search_textChanged(const QString &arg1)

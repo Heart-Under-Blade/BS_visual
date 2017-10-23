@@ -32,6 +32,19 @@ struct IntArray
 	{
 		arr[size++] = elem;
 	}
+
+	bool Consist(int elem)
+	{
+		for (int i = 0; i < size; ++i)
+		{
+			if (arr[i] == elem)
+			{
+				return true;
+			}
+		}
+
+		return false;
+	}
 };
 
 template <class T>

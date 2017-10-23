@@ -1,12 +1,10 @@
 #include "Beam.h"
 
 #include <float.h>
-#include <math.h>
 #include <assert.h>
 #include <list>
 
 #include "macro.h"
-#include "geometry_lib.h"
 
 std::ostream& operator << (std::ostream &os, const Beam &beam)
 {
@@ -63,6 +61,13 @@ void Beam::Copy(const Beam &other)
 	level = other.level;
 	location = other.location;
 
+	states.clear();
+
+	for (int i = 0; i < other.states.size(); ++i)
+	{
+		states.push_back(other.states[i]);
+	}
+
 #ifdef _TRACK_ALLOW
 	id = other.id;
 #endif
@@ -90,6 +95,11 @@ Beam::Beam(Beam &&other)
 	lastFacetID = other.lastFacetID;
 	level = other.level;
 	location = other.location;
+
+	for (int i = 0; i < other.states.size(); ++i)
+	{
+		states[i] = other.states[i];
+	}
 
 #ifdef _TRACK_ALLOW
 	id = other.id;
@@ -207,6 +217,11 @@ Beam &Beam::operator = (Beam &&other)
 		location = other.location;
 
 		J = other.J;
+
+		for (int i = 0; i < states.size(); ++i)
+		{
+			states[i] = other.states[i];
+		}
 
 #ifdef _TRACK_ALLOW
 		id = other.id;

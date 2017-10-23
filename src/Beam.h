@@ -1,10 +1,13 @@
 #pragma once
 
-#include "Particle.h"
+//#include "Particle.h"
 #include "global.h"
-#include "math/compl.hpp"
 #include "JonesMatrix.h"
 #include "float.h"
+#include "geometry_lib.h"
+#include "Polygon.h"
+
+#include <vector>
 
 #ifdef _TRACK_ALLOW
 //#include <vector>
@@ -55,6 +58,8 @@ public:
 	double D;						///< current position of phase front from Ax+By+Cz+D=0
 
 	long long int id = 0;
+
+	std::vector<BeamState> states;
 #ifdef _TRACK_ALLOW
 //	std::vector<int> track;
 #endif

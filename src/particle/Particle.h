@@ -1,7 +1,5 @@
 #pragma once
 
-#include <math.h>
-
 #include "compl.hpp"
 #include "geometry_lib.h"
 #include "Facet.h"
