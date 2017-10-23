@@ -77,14 +77,18 @@ void ParticleView::DrawParticle(const VisualParticle &particle,
 	DrawFacets(particle.invisibleFacets, drawNumbers, invisPen);
 
 	DrawFacets(particle.visibleFacets, drawNumbers,
-			   QPen(Qt::black), QBrush(Qt::cyan));
+			   QPen(Qt::blue), QBrush(Qt::white));
 
 	DrawTrack(particle.track);
 
 	if (drawAxes)
 	{
-		DrawAxes(particle.axes);
+		DrawAxes(particle.globalAxes);
 	}
+
+	QPen pen = invisPen;
+	pen.setColor(Qt::blue);
+	DrawAxis(particle.localAxes[2], "Z", pen);
 }
 
 QPointF ParticleView::CenterOfPolygon(const QPolygonF &pol)
@@ -117,13 +121,12 @@ void ParticleView::DrawFacetNumber(const NumberedFacet &facet, const QColor &col
 	facetNumber->setPos(x, y);
 }
 
-void ParticleView::DrawAxis(const QPointF &axis, const QString &letter)
+void ParticleView::DrawAxis(const QPointF &axis, const QString &letter,
+							const QPen &pen)
 {
 	double x = axis.x();
 	double y = axis.y();
-
-	QPen redPen(Qt::red);
-	scene->addLine(0, 0, x, y, redPen);
+	scene->addLine(0, 0, x, y, pen);
 
 	QGraphicsItem *text = scene->addText(letter);
 	text->moveBy(x, y);
@@ -137,12 +140,11 @@ void ParticleView::DrawAxis(const QPointF &axis, const QString &letter)
 
 void ParticleView::DrawAxes(const QVector<QPointF> &axes)
 {
-//	QBrush redBrush(Qt::red);
 	double size = 10;
 
-	DrawAxis(axes[0], "X");
-	DrawAxis(axes[1], "Y");
-	DrawAxis(axes[2], "Z");
+	DrawAxis(axes[0], "Xw");
+	DrawAxis(axes[1], "Yw");
+	DrawAxis(axes[2], "Zw");
 //	QPolygonF arrowX;
 //	arrowX << QPointF(size, 0) << QPointF(size-arrowSize, arrowSize/4)
 //		   << QPointF(size-arrowSize, -arrowSize/4) << QPointF(size, 0);

@@ -73,7 +73,8 @@ public:
 	void Clear();
 
 	void RotateParticle(const Angle &rotAngle, const Angle &viewAngle);
-	QVector<QPointF> RotateAxes(const Angle &viewAngle);
+	QVector<QPointF> RotateLocalAxes(const Angle &angle, const Angle &viewAngle);
+	QVector<QPointF> RotateGlobalAxes(const Angle &viewAngle);
 
 	QStringList GetParticleTypes() const;
 	QString GetAdditionalParticleParam(const QString &type) const;
@@ -114,7 +115,8 @@ private:
 	Particle *particle;
 	Tracing *tracing;
 	PType ptype;
-	Axes axes;
+	Axes localAxes;
+	Axes globalAxes;
 
 private:
 	QPolygonF Union(QVector<QPolygonF> polygons, double epsilon);

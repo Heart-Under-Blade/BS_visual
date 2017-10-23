@@ -9,7 +9,8 @@ class NumberedFacet;
 struct VisualParticle
 {
 	double refrIndex;
-	QVector<QPointF> axes;
+	QVector<QPointF> localAxes;
+	QVector<QPointF> globalAxes;
 	QVector<NumberedFacet> track;
 	QVector<NumberedFacet> visibleFacets;
 	QVector<NumberedFacet> invisibleFacets;
@@ -41,7 +42,8 @@ private:
 
 private:
 	void DrawFacetNumber(const NumberedFacet &facet, const QColor &color);
-	void DrawAxis(const QPointF &axis, const QString &letter);
+	void DrawAxis(const QPointF &axis, const QString &letter,
+				  const QPen &pen = QPen(Qt::red));
 	void DrawAxes(const QVector<QPointF> &axes);
 	void DrawFacets(const QVector<NumberedFacet> &facets, bool drawNumbers,
 					const QPen &pen, const QBrush &brush = QBrush());

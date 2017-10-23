@@ -3,7 +3,7 @@
 
 CertainAggregate::CertainAggregate(const complex &refrIndex, double sizeIndex)
 {
-	Init(64, refrIndex, sizeIndex*120);
+	Init(64, refrIndex, sizeIndex*240);
 
 	SetSymmetry(M_PI, 2*M_PI);
 	SetFacetParams();

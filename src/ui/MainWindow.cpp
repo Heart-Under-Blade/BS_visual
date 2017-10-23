@@ -176,7 +176,8 @@ void MainWindow::DrawParticle()
 	VisualParticle particle;
 	p_proxy->GetVisibleFacets(particle.visibleFacets, particle.invisibleFacets);
 	particle.refrIndex = ui->doubleSpinBox_refrIndex->value();
-	particle.axes = p_proxy->RotateAxes(viewAngle);
+	particle.localAxes = p_proxy->RotateLocalAxes(rotAngle, viewAngle);
+	particle.globalAxes = p_proxy->RotateGlobalAxes(viewAngle);
 
 	if (isBeamSelected)
 	{

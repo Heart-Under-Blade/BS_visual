@@ -267,11 +267,33 @@ void ParticleProxy::RotateParticle(const Angle &rotAngle, const Angle &viewAngle
 	particle->RotateGlobal(viewAngle.beta, viewAngle.gamma, viewAngle.alpha);
 }
 
-QVector<QPointF> ParticleProxy::RotateAxes(const Angle &viewAngle)
+QVector<QPointF> ParticleProxy::RotateLocalAxes(const Angle &angle, const Angle &viewAngle)
+{
+	vector<Point3f> rotatedAxes, resAxes;
+	particle->RotatePoints(angle.beta, angle.gamma, angle.alpha,
+						   vector<Point3f>{localAxes.x, localAxes.y, localAxes.z}, rotatedAxes);
+	particle->RotatePointsGlobal(viewAngle.beta, viewAngle.gamma, viewAngle.alpha,
+								 rotatedAxes, resAxes);
+
+	double size = particle->GetMainSize();
+	resAxes[0] = resAxes[0] * size;
+	resAxes[1] = resAxes[1] * size;
+	resAxes[2] = resAxes[2] * size;
+
+	QPolygonF res;
+	res.append(QPointF{resAxes.at(0).c_x, resAxes.at(0).c_y});
+	res.append(QPointF{resAxes.at(1).c_x, resAxes.at(1).c_y});
+	res.append(QPointF{resAxes.at(2).c_x, resAxes.at(2).c_y});
+
+	TranslateCoordinates(res);
+	return res;
+}
+
+QVector<QPointF> ParticleProxy::RotateGlobalAxes(const Angle &viewAngle)
 {
 	vector<Point3f> resAxes;
 	particle->RotatePointsGlobal(viewAngle.beta, viewAngle.gamma, viewAngle.alpha,
-								 vector<Point3f>{axes.x, axes.y, axes.z}, resAxes);
+								 vector<Point3f>{globalAxes.x, globalAxes.y, globalAxes.z}, resAxes);
 
 	double size = particle->GetMainSize();
 	resAxes[0] = resAxes[0] * size;
