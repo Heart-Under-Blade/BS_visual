@@ -39,6 +39,9 @@ private slots:
 	void DrawParticle(int);
 	void DrawParticle(double);
 
+	void ParticleChanged(int);
+	void ParticleChanged(double);
+
 private:
 	Ui::MainWindow *ui;
 	ParticleProxy *p_proxy;
@@ -47,11 +50,12 @@ private:
 
 	ParticleView *particleView;
 	int precision;
+	char format;
 	QMap<QString, QVariant> state;
 	bool hasAdditional;
 	double coordinateOffset = 90;
 	int beamNumber;
-	bool isBeamSelected;
+	bool drawTrack;
 
 	QVector<QColor> colors;
 
@@ -75,4 +79,6 @@ private:
 	void ConnectWidgets();
 	void SetParticleView();
 	void FillResultBeamData(const BeamInfo &info);
+	void SetViewAngle(const GlobalAngle &value);
+	void DeleteModel();
 };

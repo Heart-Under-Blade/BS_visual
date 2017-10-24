@@ -9,6 +9,7 @@ TEMPLATE = app
 CONFIG += c++11
 
 DESTDIR = ../bin
+#CONFIG+=wwwidgets
 
 LIBS += -lglu32 -lopengl32
 

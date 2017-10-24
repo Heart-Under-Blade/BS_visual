@@ -38,7 +38,9 @@ private:
 	double zoomFactor;
 
 	QPen mainPen;
-	QPen invisPen;
+	QPen dashPen;
+
+	int textSize;
 
 private:
 	void DrawFacetNumber(const NumberedFacet &facet, const QColor &color);
@@ -49,4 +51,6 @@ private:
 					const QPen &pen, const QBrush &brush = QBrush());
 	void DrawTrack(const QVector<NumberedFacet> &track);
 	QPointF CenterOfPolygon(const QPolygonF &pol);
+	void DrawColoredText(const QString &text, const QPointF &pos,
+						 const QColor &color, QFont font = QFont());
 };

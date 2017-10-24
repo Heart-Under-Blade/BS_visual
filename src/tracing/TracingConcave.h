@@ -67,6 +67,8 @@ private:
 
 	void AddStartBeamState(Beam &beam, int facetID);
 
+	void AddFinalState(Beam &beam);
+
 protected:
 	void TraceSecondaryBeams(std::vector<Beam> &scaterredBeams);
 

@@ -1,7 +1,8 @@
 #include "BeamItemModel.h"
 #include <QStringList>
 
-BeamItemModel::BeamItemModel(const QStringList &headers, const QString &data, QObject *parent)
+BeamItemModel::BeamItemModel(const QStringList &headers, const QString &data,
+							 QObject *parent)
 {
 	QVector<QVariant> rootData;
 	foreach (QString header, headers)

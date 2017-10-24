@@ -133,6 +133,23 @@ void TracingConcave::SelectVisibleFacets(const Beam &beam, IntArray &facetIDs)
 	SortFacets(dir, facetIDs);
 }
 
+void TracingConcave::AddFinalState(Beam &beam)
+{
+	BeamState state;
+
+	Point3f dir = -beam.direction;
+	dir.d_param = DotProduct(dir*m_particle->GetMainSize(), dir);
+
+	Point3f p;
+	Point3f c = beam.Center();
+	ProjectPointToFacet(c, dir, -dir, p);
+	state.Add(p);
+
+	state.loc = Location::Out;
+	state.facetID = beam.lastFacetID;
+	beam.states.push_back(state);
+}
+
 void TracingConcave::CatchExternalBeam(const Beam &beam, std::vector<Beam> &scatteredBeams)
 {
 	const Point3f &normal = m_facets[beam.lastFacetID].ex_normal;
@@ -175,21 +192,7 @@ void TracingConcave::CatchExternalBeam(const Beam &beam, std::vector<Beam> &scat
 	for (int i = 0; i < resSize; ++i)
 	{
 		tmp.SetPolygon(resultBeams[i]);
-
-		BeamState state;
-
-		Point3f dir = -tmp.direction;
-		dir.d_param = DotProduct(dir*100, dir);
-
-		Point3f p;
-		Point3f c = beam.Center();
-		ProjectPointToFacet(c, dir, -dir, p);
-		state.Add(p);
-
-		state.loc = Location::Out;
-		state.facetID = tmp.lastFacetID;
-		tmp.states.push_back(state);
-
+		AddFinalState(tmp);
 		scatteredBeams.push_back(tmp);
 	}
 }
@@ -326,6 +329,7 @@ void TracingConcave::TraceSecondaryBeams(std::vector<Beam> &scaterredBeams)
 
 		if (isExternalNonEmptyBeam(beam))
 		{	// посылаем обрезанный всеми гранями внешний пучок на сферу
+			AddFinalState(beam);
 			scaterredBeams.push_back(beam);
 		}
 	}

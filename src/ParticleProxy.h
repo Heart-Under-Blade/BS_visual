@@ -25,10 +25,26 @@ struct BeamInfo
 
 struct Angle
 {
-	Angle() {alpha = beta = gamma = 0;}
+	Angle() : alpha(0.f), beta(0.f), gamma(0.f) {}
+
+	Angle(double a, double b, double g)
+		: alpha(a), beta(b), gamma(g) {}
+
 	double alpha;
 	double beta;
 	double gamma;
+};
+
+struct GlobalAngle
+{
+	GlobalAngle() : phi(0.f), theta(0.f), psy(0.f) {}
+
+	GlobalAngle(double a, double b, double g)
+		: phi(a), theta(b), psy(g) {}
+
+	double phi;
+	double theta;
+	double psy;
 };
 
 struct NumberedFacet

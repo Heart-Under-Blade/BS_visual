@@ -17,9 +17,10 @@ MainWindow::MainWindow(QWidget *parent) :
 {
 	ui->setupUi(this);
 
-	isBeamSelected = false;
+	drawTrack = false;
 	model = nullptr;
 	precision = 4;
+	format = 'f';
 	p_proxy = new ParticleProxy();
 
 //	ui->mainToolBar->addAction()
@@ -49,11 +50,11 @@ MainWindow::~MainWindow()
 void MainWindow::ConnectWidgets()
 {
 	QObject::connect(ui->doubleSpinBox_alpha, SIGNAL(valueChanged(double)),
-					 this, SLOT(DrawParticle(double)));
+					 this, SLOT(ParticleChanged(double)));
 	QObject::connect(ui->doubleSpinBox_beta, SIGNAL(valueChanged(double)),
-					 this, SLOT(DrawParticle(double)));
+					 this, SLOT(ParticleChanged(double)));
 	QObject::connect(ui->doubleSpinBox_gamma, SIGNAL(valueChanged(double)),
-					 this, SLOT(DrawParticle(double)));
+					 this, SLOT(ParticleChanged(double)));
 
 	QObject::connect(ui->doubleSpinBox_phi, SIGNAL(valueChanged(double)),
 					 this, SLOT(DrawParticle(double)));
@@ -63,14 +64,14 @@ void MainWindow::ConnectWidgets()
 					 this, SLOT(DrawParticle(double)));
 
 	QObject::connect(ui->doubleSpinBox_height, SIGNAL(valueChanged(double)),
-					 this, SLOT(DrawParticle(double)));
+					 this, SLOT(ParticleChanged(double)));
 	QObject::connect(ui->doubleSpinBox_diameter, SIGNAL(valueChanged(double)),
-					 this, SLOT(DrawParticle(double)));
+					 this, SLOT(ParticleChanged(double)));
 	QObject::connect(ui->doubleSpinBox_additional, SIGNAL(valueChanged(double)),
-					 this, SLOT(DrawParticle(double)));
+					 this, SLOT(ParticleChanged(double)));
 
 	QObject::connect(ui->comboBox_types, SIGNAL(currentIndexChanged(int)),
-					 this, SLOT(DrawParticle(int)));
+					 this, SLOT(ParticleChanged(int)));
 
 	QObject::connect(ui->checkBox_axes, SIGNAL(stateChanged(int)),
 					 this, SLOT(DrawParticle(int)));
@@ -162,6 +163,18 @@ void MainWindow::DrawParticle(double)
 	DrawParticle();
 }
 
+void MainWindow::ParticleChanged(int)
+{
+	ParticleChanged(0.f);
+}
+
+void MainWindow::ParticleChanged(double)
+{
+	drawTrack = false;
+	DeleteModel();
+	DrawParticle();
+}
+
 void MainWindow::DrawParticle()
 {
 	bool drawNumbers = ui->checkBox_numbers->isChecked();
@@ -178,10 +191,10 @@ void MainWindow::DrawParticle()
 	particle.refrIndex = ui->doubleSpinBox_refrIndex->value();
 	particle.localAxes = p_proxy->RotateLocalAxes(rotAngle, viewAngle);
 	particle.globalAxes = p_proxy->RotateGlobalAxes(viewAngle);
+	particle.track.clear();
 
-	if (isBeamSelected)
+	if (drawTrack)
 	{
-		qDebug () << viewAngle.beta << viewAngle.alpha << viewAngle.gamma;
 		p_proxy->GetTrack(beamNumber, viewAngle, particle.track);
 	}
 
@@ -291,13 +304,17 @@ void MainWindow::DrawBeamAnglePoints()
 	}
 }
 
-void MainWindow::SetTrackTree()
+void MainWindow::DeleteModel()
 {
 	if (model != nullptr)
 	{
 		delete model;
+		model = nullptr;
 	}
+}
 
+void MainWindow::SetTrackTree()
+{
 	QString tracks = p_proxy->GetBeamDataString();
 	model = new BeamItemModel(QStringList{"Phi, Theta", "Beam number"}, tracks);
 	ui->treeView_tracks->setModel(model);
@@ -341,6 +358,7 @@ Angle MainWindow::GetViewAngle()
 
 void MainWindow::on_pushButton_clicked()
 {
+	ParticleChanged(0.f);
 	SetParticle();
 
 	Angle angle = GetRotateAngle();
@@ -406,37 +424,37 @@ void MainWindow::SetAngleChart()
 void MainWindow::FillResultBeamData(const BeamInfo &info)
 {
 	ui->label_track->setText(info.track);
-	ui->label_area->setText(QString::number(info.area, 'g', precision));
-	ui->label_optPath->setText(QString::number(info.beam.opticalPath, 'g', precision));
+	ui->label_area->setText(QString::number(info.area, format, precision));
+	ui->label_optPath->setText(QString::number(info.beam.opticalPath, format, precision));
 
 	auto M = info.M;
 
-	ui->label_m11->setText(QString::number(M.at(0), 'g', precision));
-	ui->label_m12->setText(QString::number(M.at(1), 'g', precision));
-	ui->label_m13->setText(QString::number(M.at(2), 'g', precision));
-	ui->label_m14->setText(QString::number(M.at(3), 'g', precision));
+	ui->label_m11->setText(QString::number(M.at(0), format, precision));
+	ui->label_m12->setText(QString::number(M.at(1), format, precision));
+	ui->label_m13->setText(QString::number(M.at(2), format, precision));
+	ui->label_m14->setText(QString::number(M.at(3), format, precision));
 
-	ui->label_m21->setText(QString::number(M.at(4), 'g', precision));
-	ui->label_m22->setText(QString::number(M.at(5), 'g', precision));
-	ui->label_m23->setText(QString::number(M.at(6), 'g', precision));
-	ui->label_m24->setText(QString::number(M.at(7), 'g', precision));
+	ui->label_m21->setText(QString::number(M.at(4), format, precision));
+	ui->label_m22->setText(QString::number(M.at(5), format, precision));
+	ui->label_m23->setText(QString::number(M.at(6), format, precision));
+	ui->label_m24->setText(QString::number(M.at(7), format, precision));
 
-	ui->label_m31->setText(QString::number(M.at(8), 'g', precision));
-	ui->label_m32->setText(QString::number(M.at(9), 'g', precision));
-	ui->label_m33->setText(QString::number(M.at(10), 'g', precision));
-	ui->label_m34->setText(QString::number(M.at(11), 'g', precision));
+	ui->label_m31->setText(QString::number(M.at(8), format, precision));
+	ui->label_m32->setText(QString::number(M.at(9), format, precision));
+	ui->label_m33->setText(QString::number(M.at(10), format, precision));
+	ui->label_m34->setText(QString::number(M.at(11), format, precision));
 
-	ui->label_m41->setText(QString::number(M.at(12), 'g', precision));
-	ui->label_m42->setText(QString::number(M.at(13), 'g', precision));
-	ui->label_m43->setText(QString::number(M.at(14), 'g', precision));
-	ui->label_m44->setText(QString::number(M.at(15), 'g', precision));
+	ui->label_m41->setText(QString::number(M.at(12), format, precision));
+	ui->label_m42->setText(QString::number(M.at(13), format, precision));
+	ui->label_m43->setText(QString::number(M.at(14), format, precision));
+	ui->label_m44->setText(QString::number(M.at(15), format, precision));
 }
 
 void MainWindow::on_treeView_tracks_clicked(const QModelIndex &index)
 {
 	if (model->hasChildren(index)) // is not root element
 	{
-		isBeamSelected = false;
+		drawTrack = false;
 		return;
 	}
 
@@ -444,11 +462,17 @@ void MainWindow::on_treeView_tracks_clicked(const QModelIndex &index)
 	QVariant itemData = model->data(secondColIndex, Qt::DisplayRole);
 
 	beamNumber = itemData.toString().toInt();
-	isBeamSelected = true;
+	drawTrack = true;
 
 	BeamInfo info;
 	p_proxy->GetBeamByNumber(beamNumber, info);
 	FillResultBeamData(info);
+
+	GlobalAngle outAngle;
+	outAngle.phi = info.phiDeg - 180;
+	outAngle.theta = info.thetaDeg - 180;
+	outAngle.psy = 0;
+	SetViewAngle(outAngle);
 
 	DrawParticle();
 }
@@ -488,10 +512,15 @@ void MainWindow::on_toolButton_resetRot_clicked()
 	DrawParticle(0.0f);
 }
 
+void MainWindow::SetViewAngle(const GlobalAngle &value)
+{
+	ui->doubleSpinBox_phi->setValue(value.phi);
+	ui->doubleSpinBox_theta->setValue(value.theta);
+	ui->doubleSpinBox_psy->setValue(value.psy);
+}
+
 void MainWindow::on_toolButton_resetView_clicked()
 {
-	ui->doubleSpinBox_phi->setValue(0.0f);
-	ui->doubleSpinBox_psy->setValue(0.0f);
-	ui->doubleSpinBox_theta->setValue(0.0f);
+	SetViewAngle(GlobalAngle());
 	DrawParticle(0.0f);
 }

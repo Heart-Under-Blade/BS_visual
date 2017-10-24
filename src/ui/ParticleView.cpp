@@ -9,11 +9,12 @@
 ParticleView::ParticleView(QWidget *parent)
 	: QGraphicsView(parent)
 {
+	textSize = 5;
 	mainPen.setColor(Qt::black);
 
-	invisPen.setColor(Qt::gray);
-	invisPen.setStyle(Qt::DashLine);
-	invisPen.setDashPattern(QVector<qreal>{5, 10});
+	dashPen.setColor(Qt::gray);
+	dashPen.setStyle(Qt::DashLine);
+	dashPen.setDashPattern(QVector<qreal>{5, 10});
 
 	zoomFactor = 0.1;
 	scene = new QGraphicsScene(this);
@@ -33,39 +34,49 @@ void ParticleView::DrawTrack(const QVector<NumberedFacet> &track)
 	}
 
 	QPen pen(Qt::red);
-	QPen pen2 = invisPen;
+
+	QPen pen2 = dashPen;
 	pen2.setColor(Qt::red);
 
 	// polygons
-	for (const NumberedFacet &pol : track)
-	{
-		scene->addPolygon(pol.pol, pen, QBrush(Qt::green));
-	}
+//	for (const NumberedFacet &pol : track)
+//	{
+//		scene->addPolygon(pol.pol, pen, QBrush(Qt::green));
+//	}
 
-	QPointF c1 = CenterOfPolygon(track.at(0).pol);
-	QPointF c2 = CenterOfPolygon(track.at(1).pol);
-	scene->addLine(c1.x(), c1.y(), c2.x(), c2.y(), pen);
-	scene->addEllipse(c1.x()-2, c1.y()-2, 4, 4, pen, QBrush(Qt::green));
+	scene->addPolygon(track.at(track.size()-2).pol, pen, QBrush(Qt::green));
 
 	// lines
-	for (int i = 2; i < track.size()-1; ++i)
+	QPointF c1 = track.first().pol.at(0);
+	QPointF c2 = CenterOfPolygon(track.at(1).pol);
+	scene->addLine(c1.x(), c1.y(), c2.x(), c2.y(), pen);
+//	scene->addEllipse(c1.x()-2, c1.y()-2, 4, 4, pen, QBrush(Qt::green));
+
+	for (int i = 2; i < track.size(); ++i)
 	{
 		c1 = c2;
 		c2 = CenterOfPolygon(track.at(i).pol);
 		scene->addLine(c1.x(), c1.y(), c2.x(), c2.y(), pen2);
-		scene->addEllipse(c1.x()-2, c1.y()-2, 4, 4, pen, QBrush(Qt::green));
+		scene->addEllipse(c1.x()-2, c1.y()-2, 4, 4, pen, QBrush(Qt::red));
 	}
 
 	c1 = CenterOfPolygon(track.at(track.size()-2).pol);
-	c2 = CenterOfPolygon(track.at(track.size()-1).pol);
+	c2 = track.last().pol.at(0);
 	scene->addLine(c1.x(), c1.y(), c2.x(), c2.y(), pen);
-	scene->addEllipse(c2.x()-2, c2.y()-2, 4, 4, pen, QBrush(Qt::green));
+//	scene->addEllipse(c2.x()-2, c2.y()-2, 4, 4, pen, QBrush(Qt::green));
 
 	// numbers
+	QFont font;
+	font.setBold(true);
+
+	DrawColoredText("in", track.at(0).pol.at(0), mainPen.color(), font);
+
 	for (int i = 1; i < track.size()-1; ++i)
 	{
 		DrawFacetNumber(track.at(i), mainPen.color());
 	}
+
+	DrawColoredText("out", track.last().pol.at(0), mainPen.color(), font);
 }
 
 void ParticleView::DrawParticle(const VisualParticle &particle,
@@ -74,7 +85,7 @@ void ParticleView::DrawParticle(const VisualParticle &particle,
 	scene->clear();
 //	QBrush brush(QColor(QRgba64::fromRgba(0, 0, 255, 255/(1/sqrt(refrIndex*4)))));
 
-	DrawFacets(particle.invisibleFacets, drawNumbers, invisPen);
+	DrawFacets(particle.invisibleFacets, drawNumbers, dashPen);
 
 	DrawFacets(particle.visibleFacets, drawNumbers,
 			   QPen(Qt::blue), QBrush(Qt::white));
@@ -86,9 +97,11 @@ void ParticleView::DrawParticle(const VisualParticle &particle,
 		DrawAxes(particle.globalAxes);
 	}
 
-	QPen pen = invisPen;
+	QPen pen = dashPen;
 	pen.setColor(Qt::blue);
 	DrawAxis(particle.localAxes[2], "Z", pen);
+//	double size = textSize*2;
+//	scene->addEllipse(-size, -size, size*2, size*2, QPen(Qt::blue));
 }
 
 QPointF ParticleView::CenterOfPolygon(const QPolygonF &pol)
@@ -105,20 +118,24 @@ QPointF ParticleView::CenterOfPolygon(const QPolygonF &pol)
 	return center;
 }
 
-void ParticleView::DrawFacetNumber(const NumberedFacet &facet, const QColor &color)
+void ParticleView::DrawColoredText(const QString &text, const QPointF &pos,
+								   const QColor &color, QFont font)
 {
-	QPointF center = CenterOfPolygon(facet.pol);
-
-	QFont font;
-	font.setPointSize(5);
-	QString numText = QString::number(facet.num);
-	QGraphicsTextItem *facetNumber = scene->addText(numText, font);
+	font.setPointSize(textSize);
+	QGraphicsTextItem *facetNumber = scene->addText(text, font);
 
 	facetNumber->setDefaultTextColor(color);
 	QPointF textCenter = facetNumber->boundingRect().center();
-	double x = center.x() - textCenter.x();
-	double y = center.y() - textCenter.y();
+	double x = pos.x() - textCenter.x();
+	double y = pos.y() - textCenter.y();
 	facetNumber->setPos(x, y);
+}
+
+void ParticleView::DrawFacetNumber(const NumberedFacet &facet, const QColor &color)
+{
+	QPointF center = CenterOfPolygon(facet.pol);
+	QString numText = QString::number(facet.num);
+	DrawColoredText(numText, center, color);
 }
 
 void ParticleView::DrawAxis(const QPointF &axis, const QString &letter,
@@ -140,7 +157,7 @@ void ParticleView::DrawAxis(const QPointF &axis, const QString &letter,
 
 void ParticleView::DrawAxes(const QVector<QPointF> &axes)
 {
-	double size = 10;
+	double size = textSize*2;
 
 	DrawAxis(axes[0], "Xw");
 	DrawAxis(axes[1], "Yw");
