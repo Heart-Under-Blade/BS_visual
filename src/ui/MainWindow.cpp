@@ -30,7 +30,7 @@ MainWindow::MainWindow(QWidget *parent) :
 	RecoverState();
 
 	SetAdditionalParamName();
-	SetAngleChart();
+	SetDirectionChart();
 
 	SetParticleView();
 
@@ -236,74 +236,6 @@ void MainWindow::on_comboBox_types_currentIndexChanged(int)
 	SetAdditionalParamName();
 }
 
-void MainWindow::DrawBeamAnglePoints()
-{
-	QVector<QPair<QPointF, int>> angles;
-	int max = 0, min = INT_MAX;
-
-	TrackMap trackMap = p_proxy->GetTrackMap();
-
-	foreach (QString tKey, trackMap.keys())
-	{
-		BeamData data = trackMap.value(tKey);
-		BeamInfo info = data.value(data.keys().at(0));
-
-		QPair<QPointF, int> angleData;
-		angleData.first = QPointF(info.phiDeg, info.thetaDeg);
-		angleData.second = data.size();
-		angles.append(angleData);
-
-		if (angleData.second < min)
-		{
-			min = angleData.second;
-		}
-
-		if (angleData.second > max)
-		{
-			max = angleData.second;
-		}
-	}
-
-	float coef = (float)(max - min)/colors.size();
-
-	QVector<QPair<int, int>> ranges;
-
-	QPair<int, int> range;
-	range.first = min;
-	range.second = min + lround(coef);
-	ranges.append(range);
-
-	for (int i = 1; i < colors.size(); ++i)
-	{
-		range.first = ranges.last().second + 1;
-		range.second = min + lround(coef*(i+1));
-		ranges.append(range);
-	}
-
-	for (int i = 0; i < angles.size(); ++i)
-	{
-		int beamCount = angles[i].second;
-		int id = 0;
-
-		for (int j = 0; j < ranges.size(); ++j)
-		{
-			if (beamCount >= ranges[j].first
-					&& beamCount <= ranges[j].second)
-			{
-				id = j;
-			}
-		}
-
-		QScatterSeries *series = (QScatterSeries*)chart->series().at(id);
-
-		QPair<int, int> r = ranges[id];
-		series->setName(QString("%1-%2").arg(r.first).arg(r.second));
-
-		QPointF a = angles[i].first;
-		series->append(a.x(), a.y());
-	}
-}
-
 void MainWindow::DeleteModel()
 {
 	if (model != nullptr)
@@ -356,6 +288,21 @@ Angle MainWindow::GetViewAngle()
 	return a;
 }
 
+void MainWindow::GetDirections(QMap<int, QPointF> &directions)
+{
+	BeamMap map = p_proxy->GetBeamMap();
+
+	foreach (QString tKey, map.keys())
+	{
+		BeamData data = map.value(tKey);
+		BeamInfo info = data.value(data.keys().at(0));
+
+		QPointF dir = QPointF(info.phiDeg, info.thetaDeg);
+		int count = data.size();
+		directions.insertMulti(count, dir);
+	}
+}
+
 void MainWindow::on_pushButton_clicked()
 {
 	ParticleChanged(0.f);
@@ -368,54 +315,20 @@ void MainWindow::on_pushButton_clicked()
 	p_proxy->Trace(angle, viewAngle, reflNum);
 
 	SetTrackTree();
-	DrawBeamAnglePoints();
+
+	QMap<int, QPointF> directions;
+	GetDirections(directions);
+
+	dirChart->Draw(directions);
 }
 
-void MainWindow::SetAngleChart()
+void MainWindow::SetDirectionChart()
 {
-	colors.append(QColor(0, 0, 255));
-	colors.append(QColor(109, 0, 255));
-	colors.append(QColor(164, 0, 255));
-	colors.append(QColor(255, 0, 255));
-	colors.append(QColor(255, 0, 144));
-	colors.append(QColor(255, 0, 0));
-
-	chart = new QPolarChart();
-
-//	chart->setTitle("Use arrow keys to scroll, +/- to zoom, and space to switch chart type.");
-
-	phiAxis = new QValueAxis();
-	phiAxis->setTickCount(9); // First and last ticks are co-located on 0/360 angle.
-	phiAxis->setLabelFormat("%.1f");
-	phiAxis->setShadesVisible(true);
-	phiAxis->setShadesBrush(QBrush(QColor(249, 249, 255)));
-	phiAxis->setReverse(true);
-	chart->addAxis(phiAxis, QPolarChart::PolarOrientationAngular);
-
-	thetaAxis = new QValueAxis();
-	thetaAxis->setTickCount(7);
-	thetaAxis->setLabelFormat("%d");
-	chart->addAxis(thetaAxis, QPolarChart::PolarOrientationRadial);
-
-	thetaAxis->setRange(0, 180);
-	phiAxis->setRange(0, 360);
-
-	foreach (const QColor &color, colors)
-	{
-		QScatterSeries *angleSeries = new QScatterSeries();
-		angleSeries->setMarkerShape(QScatterSeries::MarkerShapeCircle);
-		angleSeries->setMarkerSize(10);
-		angleSeries->setColor(color);
-
-		chart->addSeries(angleSeries);
-		angleSeries->attachAxis(phiAxis);
-		angleSeries->attachAxis(thetaAxis);
-	}
+	dirChart = new BeamDirectionChart();
 
 	chartView = new QChartView();
-	chartView->setChart(chart);
-//	chart->legend()->setVisible(false);
-//	chartView->setRenderHint(QPainter::Antialiasing);
+	chartView->setChart(dirChart);
+	chartView->setRenderHint(QPainter::Antialiasing);
 
 	ui->widget_chart->setLayout(new QGridLayout());
 	ui->widget_chart->layout()->addWidget(chartView);

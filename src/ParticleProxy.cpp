@@ -607,7 +607,7 @@ QPolygonF ParticleProxy::Union(QVector<QPolygonF> polygons, double epsilon)
 	return resPol;
 }
 
-const TrackMap &ParticleProxy::GetTrackMap() const
+const BeamMap &ParticleProxy::GetBeamMap() const
 {
 	return beamData;
 }

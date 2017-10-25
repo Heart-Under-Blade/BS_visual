@@ -75,7 +75,7 @@ struct Axes
 };
 
 typedef QMap<QString, BeamInfo> BeamData;
-typedef QMap<QString, BeamData> TrackMap;
+typedef QMap<QString, BeamData> BeamMap;
 
 class ParticleProxy
 {
@@ -102,7 +102,7 @@ public:
 	BeamInfo &GetBeamByKeys(const QString &trackKey, const QString &beamKey);
 	void GetBeamByNumber(int number, BeamInfo &binfo);
 
-	const TrackMap &GetTrackMap() const;
+	const BeamMap &GetBeamMap() const;
 
 	Particle *GetParticle() const;
 	void GetVisibleFacets(QVector<NumberedFacet> &visfacets, QVector<NumberedFacet> &invisFacets);
@@ -126,7 +126,7 @@ private:
 
 	QMap<PType, QString> particleTypes;
 
-	TrackMap beamData;
+	BeamMap beamData;
 
 	Particle *particle;
 	Tracing *tracing;

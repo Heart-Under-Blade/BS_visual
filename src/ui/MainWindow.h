@@ -2,15 +2,10 @@
 
 #include <QMainWindow>
 #include <QDialog>
-#include <QtCharts/QScatterSeries>
-#include <QtCharts/QAbstractAxis>
-#include <QtCharts/QValueAxis>
-#include <QtCharts/QPolarChart>
 #include <QChartView>
 
 #include "ParticleProxy.h"
-
-QT_CHARTS_USE_NAMESPACE
+#include "BeamDirectionChart.h"
 
 class BeamItemModel;
 class ParticleView;
@@ -57,18 +52,13 @@ private:
 	int beamNumber;
 	bool drawTrack;
 
-	QVector<QColor> colors;
-
-	QPolarChart *chart;
-	QValueAxis *phiAxis;
-	QValueAxis *thetaAxis;
+	BeamDirectionChart *dirChart;
 	QWidget *widget;
 
 private:
 	void FillParticleTypes();
 	void SetAdditionalParamName();
-	void SetAngleChart();
-	void DrawBeamAnglePoints();
+	void SetDirectionChart();
 	void SetTrackTree();
 	Angle GetRotateAngle();
 	Angle GetViewAngle();
@@ -81,4 +71,5 @@ private:
 	void FillResultBeamData(const BeamInfo &info);
 	void SetViewAngle(const GlobalAngle &value);
 	void DeleteModel();
+	void GetDirections(QMap<int, QPointF> &directions);
 };
