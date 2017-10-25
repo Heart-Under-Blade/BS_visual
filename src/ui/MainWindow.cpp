@@ -86,13 +86,13 @@ void MainWindow::SetParticleView()
 	QGridLayout *lo = (QGridLayout*)ui->widget_particleView->layout();
 	lo->addWidget(particleView, 6, 0, 1, 4);
 
-	widget = new QWidget();
-	widget->setLayout(new QGridLayout());
-	QGridLayout *go = (QGridLayout*)widget->layout();
-	go->addWidget(ui->groupBox_particlePreivew, 6, 0, 1, 4);
-	widget->resize(800, 600);
-	widget->setFocus();
-	widget->show();
+//	widget = new QWidget();
+//	widget->setLayout(new QGridLayout());
+//	QGridLayout *go = (QGridLayout*)widget->layout();
+//	go->addWidget(ui->groupBox_particlePreivew, 6, 0, 1, 4);
+//	widget->resize(800, 600);
+//	widget->setFocus();
+//	widget->show();
 }
 
 void MainWindow::WriteState()

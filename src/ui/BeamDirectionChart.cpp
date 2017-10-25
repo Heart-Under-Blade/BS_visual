@@ -13,7 +13,6 @@ BeamDirectionChart::BeamDirectionChart(QGraphicsItem *parent)
 	colors.append(QColor(255, 0, 0));
 
 	SetAxes();
-//	legend()->setVisible(false);
 }
 
 void BeamDirectionChart::FindMinMax(const QMap<int, QPointF> directions,
