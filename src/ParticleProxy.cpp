@@ -442,6 +442,19 @@ void ParticleProxy::GetBeamByNumber(int number, BeamInfo &binfo)
 	}
 }
 
+int ParticleProxy::GetTotalBeamCount()
+{
+	int total = 0;
+
+	foreach (QString key, beamData.keys())
+	{
+		BeamData data = beamData.value(key);
+		total += data.size();
+	}
+
+	return total;
+}
+
 void ParticleProxy::GetVisibleFacets(QVector<NumberedFacet> &visfacets,
 									 QVector<NumberedFacet> &invisFacets)
 {

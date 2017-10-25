@@ -101,6 +101,7 @@ public:
 	QString GetBeamDataString(const QString &searchLine);
 	BeamInfo &GetBeamByKeys(const QString &trackKey, const QString &beamKey);
 	void GetBeamByNumber(int number, BeamInfo &binfo);
+	int GetTotalBeamCount();
 
 	const BeamMap &GetBeamMap() const;
 

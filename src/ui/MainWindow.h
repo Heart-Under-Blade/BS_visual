@@ -59,7 +59,7 @@ private:
 	void FillParticleTypes();
 	void SetAdditionalParamName();
 	void SetDirectionChart();
-	void SetTrackTree();
+	void SetBeamTree();
 	Angle GetRotateAngle();
 	Angle GetViewAngle();
 	void SetParticle();

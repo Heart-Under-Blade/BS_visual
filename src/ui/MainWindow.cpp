@@ -245,10 +245,12 @@ void MainWindow::DeleteModel()
 	}
 }
 
-void MainWindow::SetTrackTree()
+void MainWindow::SetBeamTree()
 {
 	QString tracks = p_proxy->GetBeamDataString();
-	model = new BeamItemModel(QStringList{"Phi, Theta", "Beam number"}, tracks);
+	int total = p_proxy->GetTotalBeamCount();
+	QString beamNum = QString("Beam number (total: %1)").arg(total);
+	model = new BeamItemModel(QStringList{"Phi, Theta", beamNum}, tracks);
 	ui->treeView_tracks->setModel(model);
 }
 
@@ -314,7 +316,7 @@ void MainWindow::on_pushButton_clicked()
 
 	p_proxy->Trace(angle, viewAngle, reflNum);
 
-	SetTrackTree();
+	SetBeamTree();
 
 	QMap<int, QPointF> directions;
 	GetDirections(directions);
@@ -408,7 +410,7 @@ void MainWindow::on_lineEdit_search_textChanged(const QString &arg1)
 	}
 	else
 	{
-		SetTrackTree();
+		SetBeamTree();
 		ui->treeView_tracks->collapseAll();
 
 		QFont stFont;
