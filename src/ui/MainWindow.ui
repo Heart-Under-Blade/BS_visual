@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1414</width>
+    <width>1326</width>
     <height>619</height>
    </rect>
   </property>
@@ -310,7 +310,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1414</width>
+     <width>1326</width>
      <height>20</height>
     </rect>
    </property>
@@ -502,22 +502,6 @@
    </attribute>
    <widget class="QWidget" name="dockWidgetContents_5">
     <layout class="QGridLayout" name="gridLayout_12">
-     <item row="0" column="1">
-      <widget class="QWidget" name="widget_chart" native="true">
-       <property name="sizePolicy">
-        <sizepolicy hsizetype="Expanding" vsizetype="MinimumExpanding">
-         <horstretch>0</horstretch>
-         <verstretch>0</verstretch>
-        </sizepolicy>
-       </property>
-       <property name="minimumSize">
-        <size>
-         <width>300</width>
-         <height>300</height>
-        </size>
-       </property>
-      </widget>
-     </item>
      <item row="1" column="1">
       <widget class="QGroupBox" name="groupBox_beam">
        <property name="sizePolicy">
@@ -760,6 +744,22 @@
         </widget>
        </item>
       </layout>
+     </item>
+     <item row="0" column="0" colspan="2">
+      <widget class="QWidget" name="widget_chart" native="true">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Expanding" vsizetype="MinimumExpanding">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
+       <property name="minimumSize">
+        <size>
+         <width>300</width>
+         <height>300</height>
+        </size>
+       </property>
+      </widget>
      </item>
     </layout>
    </widget>

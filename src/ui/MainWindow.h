@@ -4,6 +4,7 @@
 #include <QDialog>
 #include <QChartView>
 
+#include "SettingsDialog.h"
 #include "ParticleProxy.h"
 #include "BeamDirectionChart.h"
 
@@ -29,6 +30,7 @@ private slots:
 	void on_lineEdit_search_textChanged(const QString &arg1);
 	void on_toolButton_resetRot_clicked();
 	void on_toolButton_resetView_clicked();
+	void on_toolButton_expandTree_clicked();
 
 	void DrawParticle();
 	void DrawParticle(int);
@@ -37,16 +39,21 @@ private slots:
 	void ParticleChanged(int);
 	void ParticleChanged(double);
 
-	void on_toolButton_expandTree_clicked();
+	void OpenSettingsDialog(bool);
+	void AcceptSettings();
 
 private:
 	Ui::MainWindow *ui;
 	ParticleProxy *p_proxy;
 	BeamItemModel *model;
 	QChartView *chartView;
+	SettingsDialog *settingsDialog;
 
 	ParticleView *particleView;
-	int precision;
+
+	int inputPrecision;
+	int outputPrecision;
+
 	char format;
 	QMap<QString, QVariant> state;
 	bool hasAdditional;
@@ -75,4 +82,5 @@ private:
 	void SetViewAngle(const GlobalAngle &value);
 	void DeleteModel();
 	void GetDirections(QMap<int, QPointF> &directions);
+	void SetInputPrecisions();
 };

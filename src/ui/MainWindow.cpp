@@ -22,11 +22,12 @@ MainWindow::MainWindow(QWidget *parent) :
 
 	drawTrack = false;
 	model = nullptr;
-	precision = 4;
 	format = 'f';
 	p_proxy = new ParticleProxy();
 
-//	ui->mainToolBar->addAction()
+	ui->mainToolBar->addAction("Settings");
+	settingsDialog = new SettingsDialog();
+	AcceptSettings();
 
 	FillParticleTypes();
 
@@ -38,8 +39,6 @@ MainWindow::MainWindow(QWidget *parent) :
 	SetParticleView();
 
 	ConnectWidgets();
-
-	DrawParticle(0.0f);
 }
 
 MainWindow::~MainWindow()
@@ -80,6 +79,29 @@ void MainWindow::ConnectWidgets()
 					 this, SLOT(DrawParticle(int)));
 	QObject::connect(ui->checkBox_numbers, SIGNAL(stateChanged(int)),
 					 this, SLOT(DrawParticle(int)));
+
+	QObject::connect(ui->mainToolBar->actions().last(), SIGNAL(triggered(bool)),
+					 this, SLOT(OpenSettingsDialog(bool)));
+
+	QObject::connect(settingsDialog, SIGNAL(accepted()),
+					 this, SLOT(AcceptSettings()));
+}
+
+void MainWindow::SetInputPrecisions()
+{
+	ui->doubleSpinBox_alpha->setDecimals(inputPrecision);
+	ui->doubleSpinBox_beta->setDecimals(inputPrecision);
+	ui->doubleSpinBox_gamma->setDecimals(inputPrecision);
+
+	ui->doubleSpinBox_phi->setDecimals(inputPrecision);
+	ui->doubleSpinBox_theta->setDecimals(inputPrecision);
+	ui->doubleSpinBox_psy->setDecimals(inputPrecision);
+
+	ui->doubleSpinBox_height->setDecimals(inputPrecision);
+	ui->doubleSpinBox_diameter->setDecimals(inputPrecision);
+	ui->doubleSpinBox_additional->setDecimals(inputPrecision);
+
+	ui->doubleSpinBox_refrIndex->setDecimals(inputPrecision);
 }
 
 void MainWindow::SetParticleView()
@@ -89,13 +111,7 @@ void MainWindow::SetParticleView()
 	QGridLayout *lo = (QGridLayout*)ui->widget_particleView->layout();
 	lo->addWidget(particleView, 6, 0, 1, 4);
 
-//	widget = new QWidget();
-//	widget->setLayout(new QGridLayout());
-//	QGridLayout *go = (QGridLayout*)widget->layout();
-//	go->addWidget(ui->groupBox_particlePreivew, 6, 0, 1, 4);
-//	widget->resize(800, 600);
-//	widget->setFocus();
-//	widget->show();
+	DrawParticle();
 }
 
 void MainWindow::WriteState()
@@ -176,6 +192,17 @@ void MainWindow::ParticleChanged(double)
 	drawTrack = false;
 	DeleteModel();
 	DrawParticle();
+}
+
+void MainWindow::OpenSettingsDialog(bool)
+{
+	settingsDialog->show();
+}
+
+void MainWindow::AcceptSettings()
+{
+	settingsDialog->GetPrecisions(inputPrecision, outputPrecision);
+	SetInputPrecisions();
 }
 
 void MainWindow::DrawParticle()
@@ -342,30 +369,30 @@ void MainWindow::SetDirectionChart()
 void MainWindow::FillResultBeamData(const BeamInfo &info)
 {
 	ui->label_track->setText(info.track);
-	ui->label_area->setText(QString::number(info.area, format, precision));
-	ui->label_optPath->setText(QString::number(info.beam.opticalPath, format, precision));
+	ui->label_area->setText(QString::number(info.area, format, outputPrecision));
+	ui->label_optPath->setText(QString::number(info.beam.opticalPath, format, outputPrecision));
 
 	auto M = info.M;
 
-	ui->label_m11->setText(QString::number(M.at(0), format, precision));
-	ui->label_m12->setText(QString::number(M.at(1), format, precision));
-	ui->label_m13->setText(QString::number(M.at(2), format, precision));
-	ui->label_m14->setText(QString::number(M.at(3), format, precision));
+	ui->label_m11->setText(QString::number(M.at(0), format, outputPrecision));
+	ui->label_m12->setText(QString::number(M.at(1), format, outputPrecision));
+	ui->label_m13->setText(QString::number(M.at(2), format, outputPrecision));
+	ui->label_m14->setText(QString::number(M.at(3), format, outputPrecision));
 
-	ui->label_m21->setText(QString::number(M.at(4), format, precision));
-	ui->label_m22->setText(QString::number(M.at(5), format, precision));
-	ui->label_m23->setText(QString::number(M.at(6), format, precision));
-	ui->label_m24->setText(QString::number(M.at(7), format, precision));
+	ui->label_m21->setText(QString::number(M.at(4), format, outputPrecision));
+	ui->label_m22->setText(QString::number(M.at(5), format, outputPrecision));
+	ui->label_m23->setText(QString::number(M.at(6), format, outputPrecision));
+	ui->label_m24->setText(QString::number(M.at(7), format, outputPrecision));
 
-	ui->label_m31->setText(QString::number(M.at(8), format, precision));
-	ui->label_m32->setText(QString::number(M.at(9), format, precision));
-	ui->label_m33->setText(QString::number(M.at(10), format, precision));
-	ui->label_m34->setText(QString::number(M.at(11), format, precision));
+	ui->label_m31->setText(QString::number(M.at(8), format, outputPrecision));
+	ui->label_m32->setText(QString::number(M.at(9), format, outputPrecision));
+	ui->label_m33->setText(QString::number(M.at(10), format, outputPrecision));
+	ui->label_m34->setText(QString::number(M.at(11), format, outputPrecision));
 
-	ui->label_m41->setText(QString::number(M.at(12), format, precision));
-	ui->label_m42->setText(QString::number(M.at(13), format, precision));
-	ui->label_m43->setText(QString::number(M.at(14), format, precision));
-	ui->label_m44->setText(QString::number(M.at(15), format, precision));
+	ui->label_m41->setText(QString::number(M.at(12), format, outputPrecision));
+	ui->label_m42->setText(QString::number(M.at(13), format, outputPrecision));
+	ui->label_m43->setText(QString::number(M.at(14), format, outputPrecision));
+	ui->label_m44->setText(QString::number(M.at(15), format, outputPrecision));
 }
 
 void MainWindow::on_treeView_tracks_clicked(const QModelIndex &index)
