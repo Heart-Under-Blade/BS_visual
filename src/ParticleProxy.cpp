@@ -375,7 +375,9 @@ QString ParticleProxy::GetBeamDataString()
 
 			foreach (BeamInfo info, infos)
 			{
-				res += " "+dkey+"\t"+QString::number(info.number)+"\n";
+				int f = 3, b = 16;
+				QString d = QString("0x%1").arg(info.number, f, b, QChar('0'))+"\n";
+				res += " "+dkey+"\t"+d;
 			}
 		}
 	}

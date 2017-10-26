@@ -249,7 +249,7 @@ void MainWindow::SetBeamTree()
 {
 	QString tracks = p_proxy->GetBeamDataString();
 	int total = p_proxy->GetTotalBeamCount();
-	QString beamNum = QString("Beam number (total: %1)").arg(total);
+	QString beamNum = QString("Number of beams (total: %1)").arg(total);
 	model = new BeamItemModel(QStringList{"Phi, Theta", beamNum}, tracks);
 	ui->treeView_tracks->setModel(model);
 }
@@ -376,7 +376,7 @@ void MainWindow::on_treeView_tracks_clicked(const QModelIndex &index)
 	QModelIndex secondColIndex = model->index(index.row(), 1, index.parent());
 	QVariant itemData = model->data(secondColIndex, Qt::DisplayRole);
 
-	beamNumber = itemData.toString().toInt();
+	beamNumber = itemData.toString().mid(2).toUInt(NULL, 16);
 	drawTrack = true;
 
 	BeamInfo info;
