@@ -9,6 +9,7 @@
 ParticleView::ParticleView(QWidget *parent)
 	: QGraphicsView(parent)
 {
+	isDrawLocalAxes = false;
 	textSize = 5;
 	mainPen.setColor(Qt::black);
 
@@ -97,9 +98,12 @@ void ParticleView::DrawParticle(const VisualParticle &particle,
 		DrawAxes(particle.globalAxes);
 	}
 
-	QPen pen = dashPen;
-	pen.setColor(Qt::blue);
-	DrawAxis(particle.localAxes[2], "Z", pen);
+	if (isDrawLocalAxes)
+	{
+		QPen pen = dashPen;
+		pen.setColor(Qt::blue);
+		DrawAxis(particle.localAxes[2], "Z", pen);
+	}
 //	double size = textSize*2;
 //	scene->addEllipse(-size, -size, size*2, size*2, QPen(Qt::blue));
 }
@@ -171,7 +175,6 @@ void ParticleView::DrawAxes(const QVector<QPointF> &axes)
 //	arrowY << QPointF(0, size) << QPointF(arrowSize/4, size-arrowSize)
 //		   << QPointF(-arrowSize/4, size-arrowSize) << QPointF(0, size);
 //	scene->addPolygon(arrowY, redPen, redBrush);
-	// pseudo axis 'Z'
 	scene->addEllipse(-size, -size, size*2, size*2, QPen(Qt::red));
 }
 
@@ -215,4 +218,9 @@ void ParticleView::wheelEvent(QWheelEvent *event)
 		}
 	}
 
+}
+
+void ParticleView::setDrawLocalAxes(bool value)
+{
+	isDrawLocalAxes = value;
 }

@@ -26,6 +26,8 @@ public:
 	void DrawParticle(const VisualParticle &particle,
 					  bool drawNumbers, bool drawAxes);
 
+	void setDrawLocalAxes(bool value);
+
 public slots:
 	void Redraw();
 
@@ -41,6 +43,7 @@ private:
 	QPen dashPen;
 
 	int textSize;
+	bool isDrawLocalAxes;
 
 private:
 	void DrawFacetNumber(const NumberedFacet &facet, const QColor &color);

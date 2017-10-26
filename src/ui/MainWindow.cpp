@@ -75,9 +75,11 @@ void MainWindow::ConnectWidgets()
 	QObject::connect(ui->comboBox_types, SIGNAL(currentIndexChanged(int)),
 					 this, SLOT(ParticleChanged(int)));
 
-	QObject::connect(ui->checkBox_axes, SIGNAL(stateChanged(int)),
+	QObject::connect(ui->checkBox_globalAxes, SIGNAL(stateChanged(int)),
 					 this, SLOT(DrawParticle(int)));
 	QObject::connect(ui->checkBox_numbers, SIGNAL(stateChanged(int)),
+					 this, SLOT(DrawParticle(int)));
+	QObject::connect(ui->checkBox_localAxes, SIGNAL(stateChanged(int)),
 					 this, SLOT(DrawParticle(int)));
 
 	QObject::connect(ui->mainToolBar->actions().last(), SIGNAL(triggered(bool)),
@@ -208,8 +210,8 @@ void MainWindow::AcceptSettings()
 void MainWindow::DrawParticle()
 {
 	bool drawNumbers = ui->checkBox_numbers->isChecked();
-	bool drawAxes = ui->checkBox_axes->isChecked();
-
+	bool drawAxes = ui->checkBox_globalAxes->isChecked();
+	particleView->setDrawLocalAxes(ui->checkBox_localAxes->isChecked());
 	SetParticle();
 
 	Angle rotAngle = GetRotateAngle();
