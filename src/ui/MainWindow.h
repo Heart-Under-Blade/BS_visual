@@ -37,6 +37,8 @@ private slots:
 	void ParticleChanged(int);
 	void ParticleChanged(double);
 
+	void on_toolButton_expandTree_clicked();
+
 private:
 	Ui::MainWindow *ui;
 	ParticleProxy *p_proxy;
@@ -51,6 +53,7 @@ private:
 	double coordinateOffset = 90;
 	int beamNumber;
 	bool drawTrack;
+	bool isTreeExpanded;
 
 	BeamDirectionChart *dirChart;
 	QWidget *widget;

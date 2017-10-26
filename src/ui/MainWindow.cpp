@@ -17,6 +17,9 @@ MainWindow::MainWindow(QWidget *parent) :
 {
 	ui->setupUi(this);
 
+	isTreeExpanded = false;
+	ui->toolButton_expandTree->setArrowType(Qt::RightArrow);
+
 	drawTrack = false;
 	model = nullptr;
 	precision = 4;
@@ -438,4 +441,20 @@ void MainWindow::on_toolButton_resetView_clicked()
 {
 	SetViewAngle(GlobalAngle());
 	DrawParticle(0.0f);
+}
+
+void MainWindow::on_toolButton_expandTree_clicked()
+{
+	if (isTreeExpanded)
+	{
+		ui->treeView_tracks->collapseAll();
+		ui->toolButton_expandTree->setArrowType(Qt::RightArrow);
+		isTreeExpanded = false;
+	}
+	else
+	{
+		ui->treeView_tracks->expandAll();
+		ui->toolButton_expandTree->setArrowType(Qt::DownArrow);
+		isTreeExpanded = true;
+	}
 }
