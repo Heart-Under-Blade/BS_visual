@@ -15,7 +15,7 @@ ParticleView::ParticleView(QWidget *parent)
 
 	dashPen.setColor(Qt::gray);
 	dashPen.setStyle(Qt::DashLine);
-	dashPen.setDashPattern(QVector<qreal>{5, 10});
+	dashPen.setDashPattern(QVector<qreal>{textSize, textSize*2});
 
 	zoomFactor = 0.1;
 	scene = new QGraphicsScene(this);
@@ -95,17 +95,15 @@ void ParticleView::DrawParticle(const VisualParticle &particle,
 
 	if (drawAxes)
 	{
-		DrawAxes(particle.globalAxes);
+		DrawAxes(particle.globalAxes, QPen(Qt::red), "w");
 	}
 
 	if (isDrawLocalAxes)
 	{
 		QPen pen = dashPen;
 		pen.setColor(Qt::blue);
-		DrawAxis(particle.localAxes[2], "Z", pen);
+		DrawAxes(particle.localAxes, pen);
 	}
-//	double size = textSize*2;
-//	scene->addEllipse(-size, -size, size*2, size*2, QPen(Qt::blue));
 }
 
 QPointF ParticleView::CenterOfPolygon(const QPolygonF &pol)
@@ -159,13 +157,14 @@ void ParticleView::DrawAxis(const QPointF &axis, const QString &letter,
 //	arrow << QPointF(x, y) << QPointF(x-arrowSize, y-arrowSize);
 }
 
-void ParticleView::DrawAxes(const QVector<QPointF> &axes)
+void ParticleView::DrawAxes(const QVector<QPointF> &axes, const QPen &pen,
+							const QString &suffix)
 {
 	double size = textSize*2;
 
-	DrawAxis(axes[0], "Xw");
-	DrawAxis(axes[1], "Yw");
-	DrawAxis(axes[2], "Zw");
+	DrawAxis(axes[0], "X" + suffix, pen);
+	DrawAxis(axes[1], "Y" + suffix, pen);
+	DrawAxis(axes[2], "Z" + suffix, pen);
 //	QPolygonF arrowX;
 //	arrowX << QPointF(size, 0) << QPointF(size-arrowSize, arrowSize/4)
 //		   << QPointF(size-arrowSize, -arrowSize/4) << QPointF(size, 0);
@@ -175,7 +174,7 @@ void ParticleView::DrawAxes(const QVector<QPointF> &axes)
 //	arrowY << QPointF(0, size) << QPointF(arrowSize/4, size-arrowSize)
 //		   << QPointF(-arrowSize/4, size-arrowSize) << QPointF(0, size);
 //	scene->addPolygon(arrowY, redPen, redBrush);
-	scene->addEllipse(-size, -size, size*2, size*2, QPen(Qt::red));
+	scene->addEllipse(-size, -size, size*2, size*2, pen);
 }
 
 void ParticleView::DrawFacets(const QVector<NumberedFacet> &facets, bool drawNumbers,
@@ -192,14 +191,9 @@ void ParticleView::DrawFacets(const QVector<NumberedFacet> &facets, bool drawNum
 	}
 }
 
-void ParticleView::Redraw()
-{
-}
-
 void ParticleView::wheelEvent(QWheelEvent *event)
 {
 	QPoint wheel = event->angleDelta();
-//  qDebug() << wheel;
 
 	double zoomIn = 1 + zoomFactor;
 	double zoomOut = 1 - zoomFactor;
@@ -208,12 +202,10 @@ void ParticleView::wheelEvent(QWheelEvent *event)
 	{
 		if (wheel.ry() > 0)
 		{
-//			qDebug() << "zoomIn";
 			scale(zoomIn, zoomIn);
 		}
 		else
 		{
-//			qDebug() << "zoomOut";
 			scale(zoomOut, zoomOut);
 		}
 	}
