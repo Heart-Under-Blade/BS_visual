@@ -1,0 +1,23 @@
+{
+    "particle": {
+        "alpha": 0,
+        "beta": 51,
+        "cavity angle": 35,
+        "diameter": 80,
+        "gamma": 25,
+        "height": 160,
+        "internal reflections": 0,
+        "refraction index": 1.31,
+        "size index": 1,
+        "type": 1
+    },
+    "settings": {
+        "input precision": 2,
+        "output precision": 4
+    },
+    "show elements": {
+        "global axes": false,
+        "local axes": false,
+        "numbers": true
+    }
+}

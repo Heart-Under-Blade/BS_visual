@@ -92,8 +92,8 @@ public:
 	QVector<QPointF> RotateLocalAxes(const Angle &angle, const Angle &viewAngle);
 	QVector<QPointF> RotateGlobalAxes(const Angle &viewAngle);
 
+	QString GetParticleType() const;
 	QStringList GetParticleTypes() const;
-	QString GetAdditionalParticleParam(const QString &type) const;
 
 	void GetTrack(int beamNumber, const Angle &viewAngle,
 				  QVector<NumberedFacet> &track);

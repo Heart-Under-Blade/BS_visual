@@ -5,7 +5,9 @@
 #include "ParticleView.h"
 
 #include <QDebug>
-#include <QLegendMarker>
+#include <QMessageBox>
+#include <QJsonDocument>
+#include <QJsonObject>
 
 #ifdef _DEBUG // DEB
 #include <iostream>
@@ -27,13 +29,13 @@ MainWindow::MainWindow(QWidget *parent) :
 
 	ui->mainToolBar->addAction("Settings");
 	settingsDialog = new SettingsDialog();
-	AcceptSettings();
 
 	FillParticleTypes();
 
-	RecoverState();
+	RecoverSession();
+	AcceptSettings();
 
-	SetAdditionalParamName();
+	SetAdditionalParam();
 	SetDirectionChart();
 
 	SetParticleView();
@@ -43,7 +45,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
 MainWindow::~MainWindow()
 {
-	SaveState();
+	SaveSession();
 	delete ui;
 	delete p_proxy;
 	delete particleView;
@@ -69,7 +71,9 @@ void MainWindow::ConnectWidgets()
 					 this, SLOT(ParticleChanged(double)));
 	QObject::connect(ui->doubleSpinBox_diameter, SIGNAL(valueChanged(double)),
 					 this, SLOT(ParticleChanged(double)));
-	QObject::connect(ui->doubleSpinBox_additional, SIGNAL(valueChanged(double)),
+	QObject::connect(ui->doubleSpinBox_cavityAngle, SIGNAL(valueChanged(double)),
+					 this, SLOT(ParticleChanged(double)));
+	QObject::connect(ui->doubleSpinBox_sizeIndex, SIGNAL(valueChanged(double)),
 					 this, SLOT(ParticleChanged(double)));
 
 	QObject::connect(ui->comboBox_types, SIGNAL(currentIndexChanged(int)),
@@ -91,19 +95,22 @@ void MainWindow::ConnectWidgets()
 
 void MainWindow::SetInputPrecisions()
 {
-	ui->doubleSpinBox_alpha->setDecimals(inputPrecision);
-	ui->doubleSpinBox_beta->setDecimals(inputPrecision);
-	ui->doubleSpinBox_gamma->setDecimals(inputPrecision);
+	int &precision = settings.inputPrecision;
 
-	ui->doubleSpinBox_phi->setDecimals(inputPrecision);
-	ui->doubleSpinBox_theta->setDecimals(inputPrecision);
-	ui->doubleSpinBox_psy->setDecimals(inputPrecision);
+	ui->doubleSpinBox_alpha->setDecimals(precision);
+	ui->doubleSpinBox_beta->setDecimals(precision);
+	ui->doubleSpinBox_gamma->setDecimals(precision);
 
-	ui->doubleSpinBox_height->setDecimals(inputPrecision);
-	ui->doubleSpinBox_diameter->setDecimals(inputPrecision);
-	ui->doubleSpinBox_additional->setDecimals(inputPrecision);
+	ui->doubleSpinBox_phi->setDecimals(precision);
+	ui->doubleSpinBox_theta->setDecimals(precision);
+	ui->doubleSpinBox_psy->setDecimals(precision);
 
-	ui->doubleSpinBox_refrIndex->setDecimals(inputPrecision);
+	ui->doubleSpinBox_height->setDecimals(precision);
+	ui->doubleSpinBox_diameter->setDecimals(precision);
+	ui->doubleSpinBox_sizeIndex->setDecimals(precision);
+	ui->doubleSpinBox_cavityAngle->setDecimals(precision);
+
+	ui->doubleSpinBox_refrIndex->setDecimals(precision);
 }
 
 void MainWindow::SetParticleView()
@@ -116,62 +123,149 @@ void MainWindow::SetParticleView()
 	DrawParticle();
 }
 
-void MainWindow::WriteState()
+void MainWindow::SaveSession()
 {
-	std::ofstream stateFile("state.dat", std::ios::out);
-
-//	foreach (QString key, state.keys())
-//	{
-//		stateFile << state.value(key).toDouble();
-//	}
-	stateFile << state["h"].toDouble()
-			<< ' ' << state["d"].toDouble()
-			<< ' ' << state["ad"].toDouble()
-			<< ' ' << state["ri"].toDouble()
-			<< ' ' << state["b"].toDouble()
-			<< ' ' << state["g"].toDouble()
-			<< ' ' << state["ir"].toInt()
-			<< ' ' << state["pt"].toInt();
-
-	stateFile.close();
-}
-
-void MainWindow::SaveState()
-{
-	state["h"] = ui->doubleSpinBox_height->value();
-	state["d"] = ui->doubleSpinBox_diameter->value();
-	state["ad"] = ui->doubleSpinBox_additional->value();
-	state["ri"] = ui->doubleSpinBox_refrIndex->value();
-	state["b"] = ui->doubleSpinBox_beta->value();
-	state["g"] = ui->doubleSpinBox_gamma->value();
-	state["ir"] = ui->spinBox_inter->value();
-	state["pt"] = ui->comboBox_types->currentIndex();
-
-	WriteState();
-}
-
-void MainWindow::RecoverState()
-{
-	double h = 80, d = 40, ad = 0, ri = 1.31,
-			b = 45, g = 30, ir = 3, pt = 0;
-
-	if (!std::ifstream("state.dat"))
+	QJsonObject patObj;
 	{
-		WriteState();
+		double height = ui->doubleSpinBox_height->value();
+		patObj.insert("height", QJsonValue::fromVariant(height));
+
+		double diameter = ui->doubleSpinBox_diameter->value();
+		patObj.insert("diameter", QJsonValue::fromVariant(diameter));
+
+		double cavityAngle = ui->doubleSpinBox_cavityAngle->value();
+		patObj.insert("cavity angle", QJsonValue::fromVariant(cavityAngle));
+
+		double sizeIndex = ui->doubleSpinBox_sizeIndex->value();
+		patObj.insert("size index", QJsonValue::fromVariant(sizeIndex));
+
+		double refrIndex = ui->doubleSpinBox_refrIndex->value();
+		patObj.insert("refraction index", QJsonValue::fromVariant(refrIndex));
+
+		double beta = ui->doubleSpinBox_beta->value();
+		patObj.insert("beta", QJsonValue::fromVariant(beta));
+
+		double gamma = ui->doubleSpinBox_gamma->value();
+		patObj.insert("gamma", QJsonValue::fromVariant(gamma));
+
+		double alpha = ui->doubleSpinBox_alpha->value();
+		patObj.insert("alpha", QJsonValue::fromVariant(alpha));
+
+		int inter = ui->spinBox_inter->value();
+		patObj.insert("internal reflections", QJsonValue::fromVariant(inter));
+
+		int type = ui->comboBox_types->currentIndex();
+		patObj.insert("type", QJsonValue::fromVariant(type));
 	}
 
-	std::ifstream stateIn("state.dat", std::ios::in);
-	stateIn >> h >> d >> ad >> ri >> b >> g >> ir >> pt;
-	stateIn.close();
+	QJsonObject showObj;
+	{
+		bool globalAxes = ui->checkBox_globalAxes->isChecked();
+		showObj.insert("global axes", QJsonValue::fromVariant(globalAxes));
 
-	ui->doubleSpinBox_height->setValue(h);
-	ui->doubleSpinBox_diameter->setValue(d);
-	ui->doubleSpinBox_additional->setValue(ad);
-	ui->doubleSpinBox_refrIndex->setValue(ri);
-	ui->doubleSpinBox_beta->setValue(b);
-	ui->doubleSpinBox_gamma->setValue(g);
-	ui->spinBox_inter->setValue(std::lround(ir));
-	ui->comboBox_types->setCurrentIndex(std::lround(pt));
+		bool localAxes = ui->checkBox_localAxes->isChecked();
+		showObj.insert("local axes", QJsonValue::fromVariant(localAxes));
+
+		bool numbers = ui->checkBox_numbers->isChecked();
+		showObj.insert("numbers", QJsonValue::fromVariant(numbers));
+	}
+
+	settingsDialog->GetSettings(settings);
+
+	QJsonObject settingsObj;
+	{
+		settingsObj.insert("input precision", QJsonValue::fromVariant(settings.inputPrecision));
+		settingsObj.insert("output precision", QJsonValue::fromVariant(settings.outputPrecision));
+	}
+
+	QJsonObject obj;
+	obj.insert("particle", patObj);
+	obj.insert("show elements", showObj);
+	obj.insert("settings", settingsObj);
+
+	QJsonDocument doc(obj);
+
+	QFile file;
+	file.setFileName("session.json");
+	file.open(QIODevice::WriteOnly | QIODevice::Text);
+	file.write(doc.toJson());
+	file.close();
+}
+
+void MainWindow::RecoverSession()
+{
+	double h = 80, d = 40, ca = 0, si = 1, ri = 1.31,
+			b = 0, g = 0, al = 0;
+	int ir = 0, pt = 0;
+
+	QFile file;
+	file.setFileName("session.json");
+	file.open(QIODevice::ReadOnly);
+
+	QJsonParseError *error;
+	QJsonDocument doc = QJsonDocument::fromJson(file.readAll(), error);
+
+	if (doc.isNull() || doc.isEmpty())
+	{
+		QString msg = error->errorString() + "Offset: " + QString::number(error->offset);
+		QMessageBox::information(this, "Load session error", msg);
+	}
+
+	file.close();
+	QJsonObject obj = doc.object();
+
+	QJsonObject patObj = obj.value("particle").toObject();
+	{
+		double height = patObj.value("height").toDouble(h);
+		ui->doubleSpinBox_height->setValue(height);
+
+		double diameter = patObj.value("diameter").toDouble(d);
+		ui->doubleSpinBox_diameter->setValue(diameter);
+
+		double cavityAngle = patObj.value("cavity angle").toDouble(ca);
+		ui->doubleSpinBox_cavityAngle->setValue(cavityAngle);
+
+		double sizeIndex = patObj.value("size index").toDouble(si);
+		ui->doubleSpinBox_sizeIndex->setValue(sizeIndex);
+
+		double refrIndex = patObj.value("refraction index").toDouble(ri);
+		ui->doubleSpinBox_refrIndex->setValue(refrIndex);
+
+		double beta = patObj.value("beta").toDouble(b);
+		ui->doubleSpinBox_beta->setValue(beta);
+
+		double gamma = patObj.value("gamma").toDouble(g);
+		ui->doubleSpinBox_gamma->setValue(gamma);
+
+		double alpha = patObj.value("alpha").toDouble(al);
+		ui->doubleSpinBox_alpha->setValue(alpha);
+
+		int inter = patObj.value("internal reflections").toInt(ir);
+		ui->spinBox_inter->setValue(inter);
+
+		int type = patObj.value("type").toInt(pt);
+		ui->comboBox_types->setCurrentIndex(type);
+	}
+
+	QJsonObject showObj = obj.value("show elements").toObject();
+	{
+		bool globalAxes = showObj.value("global axes").toBool(false);
+		ui->checkBox_globalAxes->setChecked(globalAxes);
+
+		bool localAxes = showObj.value("local axes").toBool(false);
+		ui->checkBox_localAxes->setChecked(localAxes);
+
+		bool numbers = showObj.value("numbers").toBool(true);
+		ui->checkBox_numbers->setChecked(numbers);
+	}
+
+	QJsonObject settingsObj = obj.value("settings").toObject();
+	{
+		settings.inputPrecision = settingsObj.value("input precision").toInt(2);
+		settings.outputPrecision = settingsObj.value("output precision").toInt(4);
+	}
+
+	settingsDialog->SetSettings(settings);
 }
 
 void MainWindow::DrawParticle(int)
@@ -203,7 +297,7 @@ void MainWindow::OpenSettingsDialog(bool)
 
 void MainWindow::AcceptSettings()
 {
-	settingsDialog->GetPrecisions(inputPrecision, outputPrecision);
+	settingsDialog->GetSettings(settings);
 	SetInputPrecisions();
 }
 
@@ -243,29 +337,40 @@ void MainWindow::FillParticleTypes()
 	}
 }
 
-void MainWindow::SetAdditionalParamName()
+void MainWindow::SetAdditionalParam()
 {
-	QString type = ui->comboBox_types->currentText();
-	QString paramName = p_proxy->GetAdditionalParticleParam(type);
+	QString type = p_proxy->GetParticleType();
 
-	if (!paramName.isEmpty())
+	if (type == "Hollow column")
 	{
-		ui->label_additional->setText(paramName);
-		ui->label_additional->show();
-		ui->doubleSpinBox_additional->show();
-		hasAdditional = true;
+		ui->doubleSpinBox_cavityAngle->show();
+		ui->label_cavAngle->show();
+
+		ui->doubleSpinBox_sizeIndex->hide();
+		ui->label_sizeIndex->hide();
+	}
+	else if (type == "Aggregate")
+	{
+		ui->doubleSpinBox_sizeIndex->show();
+		ui->label_sizeIndex->show();
+
+		ui->doubleSpinBox_cavityAngle->hide();
+		ui->label_cavAngle->hide();
 	}
 	else
 	{
-		ui->label_additional->hide();
-		ui->doubleSpinBox_additional->hide();
-		hasAdditional = false;
+		ui->doubleSpinBox_cavityAngle->hide();
+		ui->label_cavAngle->hide();
+
+		ui->doubleSpinBox_sizeIndex->hide();
+		ui->label_sizeIndex->hide();
 	}
 }
 
 void MainWindow::on_comboBox_types_currentIndexChanged(int)
 {
-	SetAdditionalParamName();
+	SetParticle();
+	SetAdditionalParam();
 }
 
 void MainWindow::DeleteModel()
@@ -288,19 +393,24 @@ void MainWindow::SetBeamTree()
 
 void MainWindow::SetParticle()
 {
-	QString type = ui->comboBox_types->currentText();
+	QString t = ui->comboBox_types->currentText();
 	double ri = ui->doubleSpinBox_refrIndex->value();
 	double h = ui->doubleSpinBox_height->value();
 	double d = ui->doubleSpinBox_diameter->value();
 
-	if (hasAdditional)
+	if (t == "Hollow column")
 	{
-		double add = ui->doubleSpinBox_additional->value();
-		p_proxy->SetParticle(type, ri, h, d, add);
+		double add = ui->doubleSpinBox_cavityAngle->value();
+		p_proxy->SetParticle(t, ri, h, d, add);
+	}
+	else if (t == "Aggregate")
+	{
+		double add = ui->doubleSpinBox_sizeIndex->value();
+		p_proxy->SetParticle(t, ri, h, d, add);
 	}
 	else
 	{
-		p_proxy->SetParticle(type, ri, h, d);
+		p_proxy->SetParticle(t, ri, h, d);
 	}
 }
 
@@ -370,31 +480,33 @@ void MainWindow::SetDirectionChart()
 
 void MainWindow::FillResultBeamData(const BeamInfo &info)
 {
+	int &precision = settings.outputPrecision;
+
 	ui->label_track->setText(info.track);
-	ui->label_area->setText(QString::number(info.area, format, outputPrecision));
-	ui->label_optPath->setText(QString::number(info.beam.opticalPath, format, outputPrecision));
+	ui->label_area->setText(QString::number(info.area, format, precision));
+	ui->label_optPath->setText(QString::number(info.beam.opticalPath, format, precision));
 
 	auto M = info.M;
 
-	ui->label_m11->setText(QString::number(M.at(0), format, outputPrecision));
-	ui->label_m12->setText(QString::number(M.at(1), format, outputPrecision));
-	ui->label_m13->setText(QString::number(M.at(2), format, outputPrecision));
-	ui->label_m14->setText(QString::number(M.at(3), format, outputPrecision));
+	ui->label_m11->setText(QString::number(M.at(0), format, precision));
+	ui->label_m12->setText(QString::number(M.at(1), format, precision));
+	ui->label_m13->setText(QString::number(M.at(2), format, precision));
+	ui->label_m14->setText(QString::number(M.at(3), format, precision));
 
-	ui->label_m21->setText(QString::number(M.at(4), format, outputPrecision));
-	ui->label_m22->setText(QString::number(M.at(5), format, outputPrecision));
-	ui->label_m23->setText(QString::number(M.at(6), format, outputPrecision));
-	ui->label_m24->setText(QString::number(M.at(7), format, outputPrecision));
+	ui->label_m21->setText(QString::number(M.at(4), format, precision));
+	ui->label_m22->setText(QString::number(M.at(5), format, precision));
+	ui->label_m23->setText(QString::number(M.at(6), format, precision));
+	ui->label_m24->setText(QString::number(M.at(7), format, precision));
 
-	ui->label_m31->setText(QString::number(M.at(8), format, outputPrecision));
-	ui->label_m32->setText(QString::number(M.at(9), format, outputPrecision));
-	ui->label_m33->setText(QString::number(M.at(10), format, outputPrecision));
-	ui->label_m34->setText(QString::number(M.at(11), format, outputPrecision));
+	ui->label_m31->setText(QString::number(M.at(8), format, precision));
+	ui->label_m32->setText(QString::number(M.at(9), format, precision));
+	ui->label_m33->setText(QString::number(M.at(10), format, precision));
+	ui->label_m34->setText(QString::number(M.at(11), format, precision));
 
-	ui->label_m41->setText(QString::number(M.at(12), format, outputPrecision));
-	ui->label_m42->setText(QString::number(M.at(13), format, outputPrecision));
-	ui->label_m43->setText(QString::number(M.at(14), format, outputPrecision));
-	ui->label_m44->setText(QString::number(M.at(15), format, outputPrecision));
+	ui->label_m41->setText(QString::number(M.at(12), format, precision));
+	ui->label_m42->setText(QString::number(M.at(13), format, precision));
+	ui->label_m43->setText(QString::number(M.at(14), format, precision));
+	ui->label_m44->setText(QString::number(M.at(15), format, precision));
 }
 
 void MainWindow::on_treeView_tracks_clicked(const QModelIndex &index)

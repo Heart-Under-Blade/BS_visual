@@ -51,31 +51,28 @@ private:
 
 	ParticleView *particleView;
 
-	int inputPrecision;
-	int outputPrecision;
-
 	char format;
 	QMap<QString, QVariant> state;
-	bool hasAdditional;
 	double coordinateOffset = 90;
 	int beamNumber;
 	bool drawTrack;
 	bool isTreeExpanded;
+
+	Settings settings;
 
 	BeamDirectionChart *dirChart;
 	QWidget *widget;
 
 private:
 	void FillParticleTypes();
-	void SetAdditionalParamName();
+	void SetAdditionalParam();
 	void SetDirectionChart();
 	void SetBeamTree();
 	Angle GetRotateAngle();
 	Angle GetViewAngle();
 	void SetParticle();
-	void RecoverState();
-	void SaveState();
-	void WriteState();
+	void RecoverSession();
+	void SaveSession();
 	void ConnectWidgets();
 	void SetParticleView();
 	void FillResultBeamData(const BeamInfo &info);

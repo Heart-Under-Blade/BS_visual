@@ -9,10 +9,6 @@ SettingsDialog::SettingsDialog(QWidget *parent) :
 	setModal(true);
 	setWindowTitle("Settings");
 
-	// default values
-	inputPrecision = 2;
-	outputPrecision = 4;
-
 	ResetSettings();
 }
 
@@ -21,16 +17,23 @@ SettingsDialog::~SettingsDialog()
 	delete ui;
 }
 
-void SettingsDialog::GetPrecisions(int &input, int &output)
+void SettingsDialog::SetSettings(const Settings &setts)
 {
-	input = inputPrecision = ui->spinBox_input->value();
-	output = outputPrecision = ui->spinBox_output->value();
+	settings = setts;
+	ResetSettings();
+}
+
+void SettingsDialog::GetSettings(Settings &setts)
+{
+	settings.inputPrecision = ui->spinBox_input->value();
+	settings.outputPrecision = ui->spinBox_output->value();
+	setts = settings;
 }
 
 void SettingsDialog::ResetSettings()
 {
-	ui->spinBox_input->setValue(inputPrecision);
-	ui->spinBox_output->setValue(outputPrecision);
+	ui->spinBox_input->setValue(settings.inputPrecision);
+	ui->spinBox_output->setValue(settings.outputPrecision);
 }
 
 void SettingsDialog::on_buttonBox_rejected()

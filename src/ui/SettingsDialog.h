@@ -7,6 +7,12 @@ namespace Ui {
 class SettingsDialog;
 }
 
+struct Settings
+{
+	int inputPrecision;
+	int outputPrecision;
+};
+
 class SettingsDialog : public QDialog
 {
 	Q_OBJECT
@@ -15,16 +21,17 @@ public:
 	explicit SettingsDialog(QWidget *parent = 0);
 	~SettingsDialog();
 
-	void GetPrecisions(int &input, int &output);
+	void SetSettings(const Settings &setts);
+	void GetSettings(Settings &setts);
 
 private slots:
 	void on_buttonBox_rejected();
 
 private:
 	Ui::SettingsDialog *ui;
+	Settings settings;
 
-	int inputPrecision;
-	int outputPrecision;
+private:
 	void ResetSettings();
 };
 

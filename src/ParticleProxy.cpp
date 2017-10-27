@@ -309,25 +309,14 @@ QVector<QPointF> ParticleProxy::RotateGlobalAxes(const Angle &viewAngle)
 	return res;
 }
 
+QString ParticleProxy::GetParticleType() const
+{
+	return particleTypes.value(ptype);
+}
+
 QStringList ParticleProxy::GetParticleTypes() const
 {
 	return particleTypes.values();
-}
-
-QString ParticleProxy::GetAdditionalParticleParam(const QString &type) const
-{
-	QString param;
-
-	if (type == particleTypes.value(PType::HollowColumn))
-	{
-		param = "Cavity angle";
-	}
-	else if (type == particleTypes.value(PType::Aggregate))
-	{
-		param = "Size index";
-	}
-
-	return param;
 }
 
 void ParticleProxy::GetTrack(int beamNumber, const Angle &viewAngle,
