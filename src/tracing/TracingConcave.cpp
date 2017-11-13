@@ -35,21 +35,6 @@ void TracingConcave::SplitBeamByParticle(double beta, double gamma,
 	TraceSecondaryBeams(scaterredBeams);
 }
 
-void TracingConcave::AddStartBeamState(Beam &beam, int facetID)
-{
-	beam.states.clear();
-	BeamState state;
-
-	Point3f p;
-	Point3f c = beam.Center();
-	ProjectPointToFacet(c, -m_incidentDir, m_incidentDir, p);
-	state.Add(p);
-
-	state.facetID = facetID;
-	state.loc = Location::Out;
-	beam.states.push_back(state);
-}
-
 void TracingConcave::PushBeamsToTree(int facetID, const PolygonArray &polygons,
 									 Beam &inBeam, Beam &outBeam)
 {
@@ -133,23 +118,6 @@ void TracingConcave::SelectVisibleFacets(const Beam &beam, IntArray &facetIDs)
 	SortFacets(dir, facetIDs);
 }
 
-void TracingConcave::AddFinalState(Beam &beam)
-{
-	BeamState state;
-
-	Point3f dir = -beam.direction;
-	dir.d_param = DotProduct(dir*m_particle->GetMainSize(), dir);
-
-	Point3f p;
-	Point3f c = beam.Center();
-	ProjectPointToFacet(c, dir, -dir, p);
-	state.Add(p);
-
-	state.loc = Location::Out;
-	state.facetID = beam.lastFacetID;
-	beam.states.push_back(state);
-}
-
 void TracingConcave::CatchExternalBeam(const Beam &beam, std::vector<Beam> &scatteredBeams)
 {
 	const Point3f &normal = m_facets[beam.lastFacetID].ex_normal;
@@ -192,6 +160,15 @@ void TracingConcave::CatchExternalBeam(const Beam &beam, std::vector<Beam> &scat
 	for (int i = 0; i < resSize; ++i)
 	{
 		tmp.SetPolygon(resultBeams[i]);
+		tmp.states = beam.states;
+		tmp.states.pop_back(); // remove previous duplicate
+
+		BeamState state;
+		state.fromPolygon(tmp);
+		state.loc = Location::Out;
+		state.facetID = tmp.lastFacetID;
+		tmp.states.push_back(state);
+
 		AddFinalState(tmp);
 		scatteredBeams.push_back(tmp);
 	}
@@ -287,7 +264,9 @@ void TracingConcave::TraceSecondaryBeams(std::vector<Beam> &scaterredBeams)
 	while (m_treeSize != 0)
 	{
 		Beam beam = m_beamTree[--m_treeSize];
-//#ifdef _DEBUG // DEB
+#ifdef _DEBUG // DEB
+		if (beam.lastFacetID == 53)
+			int ff = 0;
 //		++count;
 
 //		vector<int> tr;
@@ -300,7 +279,7 @@ void TracingConcave::TraceSecondaryBeams(std::vector<Beam> &scaterredBeams)
 
 //		if (count == 3415)
 //			int fg = 0;
-//#endif
+#endif
 		if (IsTerminalBeam(beam))
 		{
 			if (beam.location == Location::Out)
@@ -329,6 +308,15 @@ void TracingConcave::TraceSecondaryBeams(std::vector<Beam> &scaterredBeams)
 
 		if (isExternalNonEmptyBeam(beam))
 		{	// посылаем обрезанный всеми гранями внешний пучок на сферу
+
+			beam.states.pop_back(); // remove previous duplicate
+
+			BeamState state;
+			state.fromPolygon(beam);
+			state.loc = Location::Out;
+			state.facetID = beam.lastFacetID;
+			beam.states.push_back(state);
+
 			AddFinalState(beam);
 			scaterredBeams.push_back(beam);
 		}

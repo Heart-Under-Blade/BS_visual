@@ -425,10 +425,117 @@ void Tracing::SortFacets_3(const Point3f &beamDir, Location location,
 }
 
 
+void Tracing::SortFacets_faster(const Point3f &beamDir, IntArray &facetIDs)
+{
+	int vertices[MAX_VERTEX_NUM];
+
+	for (int i = 0; i < facetIDs.size; ++i)
+	{
+		const int &id = facetIDs.arr[i];
+		vertices[i] = FindClosestVertex(m_facets[id], beamDir);
+	}
+
+	int left = 0;
+	int rigth = facetIDs.size - 1;
+
+	int stack[MAX_VERTEX_NUM*2];
+	int size = 0;
+
+	stack[size++] = left;
+	stack[size++] = rigth;
+
+	while (true)
+	{
+		int id = (left + rigth)/2;
+		int i = left;
+		int j = rigth;
+
+		Point3f base = m_facets[facetIDs.arr[id]].arr[vertices[id]];
+
+		while (i <= j)
+		{
+			Point3f vecB;
+			double cosVN;
+
+			do
+			{
+				vecB = base - m_facets[facetIDs.arr[i]].arr[vertices[i]];
+				cosVN = DotProduct(vecB, beamDir);
+				++i;
+			}
+			while (cosVN > EPS_COS_90);
+			--i;
+
+			do
+			{
+				vecB = base - m_facets[facetIDs.arr[j]].arr[vertices[j]];
+				cosVN = DotProduct(vecB, beamDir);
+				--j;
+			}
+			while (cosVN < EPS_M_COS_90);
+			++j;
+
+			if (i <= j)	// exchange elems
+			{
+				float temp_d = vertices[i];
+				vertices[i] = vertices[j];
+				vertices[j] = temp_d;
+
+				int temp_v = facetIDs.arr[i];
+				facetIDs.arr[i] = facetIDs.arr[j];
+				facetIDs.arr[j] = temp_v;
+
+				++i;
+				--j;
+			}
+		}
+
+		if (i < rigth)
+		{
+			stack[size++] = i;
+			stack[size++] = rigth;
+		}
+
+		if (left < j)
+		{
+			stack[size++] = left;
+			stack[size++] = j;
+		}
+
+		if (size == 0)
+		{
+			break;
+		}
+
+		rigth = stack[--size];
+		left = stack[--size];
+	}
+}
+
+
+int Tracing::FindClosestVertex(const Polygon &facet, const Point3f &beamDir)
+{
+	int closest = 0;
+
+	for (int i = 1; i < facet.size; ++i)
+	{
+		Point3f v = facet.arr[closest] - facet.arr[i];
+		double cosVD = DotProduct(v, beamDir);
+
+		if (cosVD > EPS_COS_90)
+		{
+			closest = i;
+		}
+	}
+
+	return closest;
+}
+
 void Tracing::SelectVisibleFacetsForWavefront(IntArray &facetIDs)
 {
 	FindVisibleFacetsForWavefront(facetIDs);
-	SortFacets(m_incidentDir, facetIDs);
+//	SortFacets(m_incidentDir, facetIDs);
+	SortFacets_faster(m_incidentDir, facetIDs);
 //	SortFacets_2(m_incidentDir, Location::Out, facetIDs);
 }
 
@@ -455,13 +562,38 @@ void Tracing::TraceFirstBeam(std::vector<Beam> &outBeams)
 		outBeam.lastFacetID = facetID;
 		outBeam.level = 0;
 		SetBeamID(outBeam);
+
+		AddStartBeamState(outBeam, facetID);
+		BeamState state;
+		state.fromPolygon(outBeam);
+		state.loc = Location::Out;
+		state.facetID = outBeam.lastFacetID;
+		outBeam.states.push_back(state);
+		AddFinalState(outBeam);
 		outBeams.push_back(outBeam);
+
+		AddStartBeamState(inBeam, facetID);
 		PushBeamToTree(inBeam, facetID, 0);
 
 #ifdef _CHECK_ENERGY_BALANCE
 		CalcFacetEnergy(facetID, outBeam);
 #endif
 	}
+}
+
+void Tracing::AddStartBeamState(Beam &beam, int facetID)
+{
+	beam.states.clear();
+	BeamState state;
+
+	Point3f p;
+	Point3f c = beam.Center();
+	ProjectPointToFacet(c, -m_incidentDir, m_incidentDir, p);
+	state.Add(p);
+
+	state.facetID = facetID;
+	state.loc = Location::Out;
+	beam.states.push_back(state);
 }
 
 void Tracing::CalcFacetEnergy(int facetID, const Polygon &lightedPolygon)
@@ -581,9 +713,11 @@ void Tracing::TraceSecondaryBeams(Beam &incidentBeam, int facetID,
 		SetNormalIncidenceBeamParams(cosIN, incidentBeam, inBeam, outBeam);
 
 		outBeam.id = incidentBeam.id;
+		outBeam.states = incidentBeam.states;
 		outBeam.lastFacetID = facetID;
 		outBeam.level = incidentBeam.level + 1;
 		SetBeamID(outBeam);
+		AddFinalState(outBeam);
 		outBeams.push_back(outBeam);
 	}
 	else /// slopping incidence
@@ -594,12 +728,31 @@ void Tracing::TraceSecondaryBeams(Beam &incidentBeam, int facetID,
 		if (isTrivialIncidence)
 		{
 			outBeam.id = incidentBeam.id;
+			outBeam.states = incidentBeam.states;
 			outBeam.lastFacetID = facetID;
 			outBeam.level = incidentBeam.level + 1;
 			SetBeamID(outBeam);
+			AddFinalState(outBeam);
 			outBeams.push_back(outBeam);
 		}
 	}
+}
+
+void Tracing::AddFinalState(Beam &beam)
+{
+	BeamState state;
+
+	Point3f dir = -beam.direction;
+	dir.d_param = DotProduct(dir*m_particle->GetMainSize(), dir);
+
+	Point3f p;
+	Point3f c = beam.Center();
+	ProjectPointToFacet(c, dir, -dir, p);
+	state.Add(p);
+
+	state.loc = Location::Out;
+	state.facetID = beam.lastFacetID;
+	beam.states.push_back(state);
 }
 
 void Tracing::SetSloppingIncidenceBeamParams(double cosIN, const Point3f &normal,

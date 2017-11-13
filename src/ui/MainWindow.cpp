@@ -32,7 +32,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
 	FillParticleTypes();
 
-	RecoverSession();
+	LoadSession();
 	AcceptSettings();
 
 	SetAdditionalParam();
@@ -192,7 +192,7 @@ void MainWindow::SaveSession()
 	file.close();
 }
 
-void MainWindow::RecoverSession()
+void MainWindow::LoadSession()
 {
 	double h = 80, d = 40, ca = 0, si = 1, ri = 1.31,
 			b = 0, g = 0, al = 0;
@@ -521,17 +521,12 @@ void MainWindow::on_treeView_tracks_clicked(const QModelIndex &index)
 	QVariant itemData = model->data(secondColIndex, Qt::DisplayRole);
 
 	beamNumber = itemData.toString().mid(2).toUInt(NULL, 16);
-	drawTrack = true;
 
 	BeamInfo info;
 	p_proxy->GetBeamByNumber(beamNumber, info);
 	FillResultBeamData(info);
-
-	GlobalAngle outAngle;
-	outAngle.phi = info.phiDeg - 180;
-	outAngle.theta = info.thetaDeg - 180;
-	outAngle.psy = 0;
-	SetViewAngle(outAngle);
+	SetViewAngle(GlobalAngle(info.phiDeg-180, info.thetaDeg-180, 0));
+	drawTrack = true;
 
 	DrawParticle();
 }
@@ -573,9 +568,9 @@ void MainWindow::on_toolButton_resetRot_clicked()
 
 void MainWindow::SetViewAngle(const GlobalAngle &value)
 {
+	ui->doubleSpinBox_psy->setValue(value.psy);
 	ui->doubleSpinBox_phi->setValue(value.phi);
 	ui->doubleSpinBox_theta->setValue(value.theta);
-	ui->doubleSpinBox_psy->setValue(value.psy);
 }
 
 void MainWindow::on_toolButton_resetView_clicked()

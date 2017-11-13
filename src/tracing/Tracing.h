@@ -129,7 +129,13 @@ protected:
 
 	void SetBeamID(Beam &beam);
 
+	void AddStartBeamState(Beam &beam, int facetID);
+
+	void AddFinalState(Beam &beam);
+
 private:
+	void SortFacets_faster(const Point3f &beamDir, IntArray &facetIDs);
+	int FindClosestVertex(const Polygon &facet, const Point3f &beamDir);
 	double CalcNr(const double &cosIN) const;
 
 	void SetTrivialIncidenceBeamParams(double cosIN, double Nr, const Point3f &normal,

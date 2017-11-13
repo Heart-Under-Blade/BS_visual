@@ -48,6 +48,14 @@ void TracingConvex::TraceInternalBeams(std::vector<Beam> &outBeams)
 			}
 
 			inBeam.id = beam.id;
+			inBeam.states = beam.states;
+
+			BeamState state;
+			state.fromPolygon(inBeam);
+			state.loc = Location::Out;
+			state.facetID = facetID;
+			inBeam.states.push_back(state);
+
 			PushBeamToTree(inBeam, facetID, beam.level+1);
 		}
 	}

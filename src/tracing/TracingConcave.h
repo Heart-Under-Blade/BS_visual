@@ -65,10 +65,6 @@ private:
 
 	void PushBeamsToBuffer(int facetID, const Beam &beam, bool hasOutBeam, Beam &inBeam, Beam &outBeam, std::vector<Beam> &passed);
 
-	void AddStartBeamState(Beam &beam, int facetID);
-
-	void AddFinalState(Beam &beam);
-
 protected:
 	void TraceSecondaryBeams(std::vector<Beam> &scaterredBeams);
 

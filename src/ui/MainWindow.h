@@ -71,7 +71,7 @@ private:
 	Angle GetRotateAngle();
 	Angle GetViewAngle();
 	void SetParticle();
-	void RecoverSession();
+	void LoadSession();
 	void SaveSession();
 	void ConnectWidgets();
 	void SetParticleView();

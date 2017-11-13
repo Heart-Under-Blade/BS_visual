@@ -70,14 +70,16 @@ void ParticleView::DrawTrack(const QVector<NumberedFacet> &track)
 	QFont font;
 	font.setBold(true);
 
+	QPointF c3 = CenterOfPolygon(track.at(track.size()-1).pol);
 	DrawColoredText("in", track.at(0).pol.at(0), mainPen.color(), font);
+	scene->addEllipse(c3.x()-2, c3.y()-2, 4, 4, pen, QBrush(Qt::yellow));
 
 	for (int i = 1; i < track.size()-1; ++i)
 	{
 		DrawFacetNumber(track.at(i), mainPen.color());
 	}
 
-	DrawColoredText("out", track.last().pol.at(0), mainPen.color(), font);
+//	DrawColoredText("out", track.last().pol.at(0), mainPen.color(), font);
 }
 
 void ParticleView::DrawParticle(const VisualParticle &particle,
