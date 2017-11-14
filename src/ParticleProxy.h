@@ -96,12 +96,14 @@ public:
 	QStringList GetParticleTypes() const;
 
 	void GetTrack(int beamNumber, const Angle &viewAngle,
-				  QVector<NumberedFacet> &track);
+				  QVector<NumberedFacet> &track,
+				  QVector<QPolygonF> &trackLastFacet);
 	QString GetBeamDataString();
 	QString GetBeamDataString(const QString &searchLine);
 	BeamInfo &GetBeamByKeys(const QString &trackKey, const QString &beamKey);
 	void GetBeamByNumber(int number, BeamInfo &binfo);
 	int GetTotalBeamCount();
+	void GetBeamsByKey(const QString &trackKey, QVector<Beam> &beams);
 
 	const BeamMap &GetBeamMap() const;
 

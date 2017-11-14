@@ -27,8 +27,11 @@ ParticleView::~ParticleView()
 {
 }
 
-void ParticleView::DrawTrack(const QVector<NumberedFacet> &track)
+void ParticleView::DrawTrack(const VisualParticle &particle)
 {
+	auto &track = particle.track;
+	auto &facet = particle.trackLastFacet;
+
 	if (track.isEmpty())
 	{
 		return;
@@ -45,7 +48,12 @@ void ParticleView::DrawTrack(const QVector<NumberedFacet> &track)
 //		scene->addPolygon(pol.pol, pen, QBrush(Qt::green));
 //	}
 
-	scene->addPolygon(track.at(track.size()-2).pol, pen, QBrush(Qt::green));
+	foreach (const QPolygonF p, facet)
+	{
+		scene->addPolygon(p, pen, QBrush(Qt::green));
+	}
+
+//	scene->addPolygon(track.at(track.size()-2).pol, pen, QBrush(Qt::green));
 
 	// lines
 	QPointF c1 = track.first().pol.at(0);
@@ -93,7 +101,7 @@ void ParticleView::DrawParticle(const VisualParticle &particle,
 	DrawFacets(particle.visibleFacets, drawNumbers,
 			   QPen(Qt::blue), QBrush(Qt::white));
 
-	DrawTrack(particle.track);
+	DrawTrack(particle);
 
 	if (drawAxes)
 	{

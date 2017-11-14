@@ -320,10 +320,32 @@ QStringList ParticleProxy::GetParticleTypes() const
 }
 
 void ParticleProxy::GetTrack(int beamNumber, const Angle &viewAngle,
-							 QVector<NumberedFacet> &track)
+							 QVector<NumberedFacet> &track,
+							 QVector<QPolygonF> &trackLastFacet)
 {
 	BeamInfo info;
 	GetBeamByNumber(beamNumber, info);
+
+	QVector<Beam> beams;
+	GetBeamsByKey(info.track, beams);
+
+	for (int i = 0; i < beams.size(); ++i)
+	{
+		Beam &b = beams[i];
+		RotateStates(viewAngle, b);
+
+		QPolygonF pol;
+		BeamState state = b.states.at(b.states.size()-2);
+
+		for (int j = 0; j < state.size; ++j)
+		{
+			Point3f &p = state.arr[j];
+			pol.append(QPointF(p.c_x, p.c_y));
+		}
+
+		TranslateCoordinates(pol);
+		trackLastFacet.append(pol);
+	}
 
 	RotateStates(viewAngle, info.beam);
 
@@ -334,13 +356,6 @@ void ParticleProxy::GetTrack(int beamNumber, const Angle &viewAngle,
 		for (int j = 0; j < state.size; ++j)
 		{
 			Point3f &p = state.arr[j];
-
-//			vector<Point3f> resP;
-//			resP.push_back(p);
-//			particle->RotatePointsGlobal(viewAngle.beta, viewAngle.gamma, viewAngle.alpha,
-//										 vector<Point3f>{p}, resP);
-
-//			pol.append(QPointF(resP.at(0).c_x, resP.at(0).c_y));
 			pol.append(QPointF(p.c_x, p.c_y));
 		}
 
@@ -444,6 +459,27 @@ int ParticleProxy::GetTotalBeamCount()
 	}
 
 	return total;
+}
+
+void ParticleProxy::GetBeamsByKey(const QString &trackKey, QVector<Beam> &beams)
+{
+	foreach (QString key, beamData.keys())
+	{
+		BeamData data = beamData.value(key);
+
+		foreach (QString dkey, data.uniqueKeys())
+		{
+			if (dkey.startsWith(trackKey))
+			{
+				auto infos = data.values(dkey);
+
+				foreach (BeamInfo info, infos)
+				{
+					beams.append(info.beam);
+				}
+			}
+		}
+	}
 }
 
 void ParticleProxy::GetVisibleFacets(QVector<NumberedFacet> &visfacets,

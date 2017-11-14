@@ -321,7 +321,8 @@ void MainWindow::DrawParticle()
 
 	if (drawTrack)
 	{
-		p_proxy->GetTrack(beamNumber, viewAngle, particle.track);
+		p_proxy->GetTrack(beamNumber, viewAngle, particle.track,
+						  particle.trackLastFacet);
 	}
 
 	particleView->DrawParticle(particle, drawNumbers, drawAxes);

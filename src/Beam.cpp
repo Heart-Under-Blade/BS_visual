@@ -96,10 +96,7 @@ Beam::Beam(Beam &&other)
 	level = other.level;
 	location = other.location;
 
-	for (int i = 0; i < other.states.size(); ++i)
-	{
-		states[i] = other.states[i];
-	}
+	states = other.states;
 
 #ifdef _TRACK_ALLOW
 	id = other.id;
@@ -199,6 +196,7 @@ Beam & Beam::operator = (const Beam &other)
 Beam &Beam::operator =(const Polygon &other)
 {
 	Polygon::operator =(other);
+	return *this;
 }
 
 Beam &Beam::operator = (Beam &&other)
@@ -218,10 +216,7 @@ Beam &Beam::operator = (Beam &&other)
 
 		J = other.J;
 
-		for (int i = 0; i < states.size(); ++i)
-		{
-			states[i] = other.states[i];
-		}
+		states = other.states;
 
 #ifdef _TRACK_ALLOW
 		id = other.id;
