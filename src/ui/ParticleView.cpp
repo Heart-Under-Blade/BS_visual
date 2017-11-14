@@ -99,7 +99,7 @@ void ParticleView::DrawParticle(const VisualParticle &particle,
 	DrawFacets(particle.invisibleFacets, drawNumbers, dashPen);
 
 	DrawFacets(particle.visibleFacets, drawNumbers,
-			   QPen(Qt::blue), QBrush(Qt::white));
+			   QPen(Qt::blue), QBrush(Qt::cyan));
 
 	DrawTrack(particle);
 

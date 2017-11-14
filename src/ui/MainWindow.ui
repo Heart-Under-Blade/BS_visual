@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1326</width>
+    <width>1333</width>
     <height>619</height>
    </rect>
   </property>
@@ -24,7 +24,7 @@
        </sizepolicy>
       </property>
       <property name="title">
-       <string>Parameters</string>
+       <string>Input parameters</string>
       </property>
       <layout class="QGridLayout" name="gridLayout_7">
        <item row="7" column="0">
@@ -235,6 +235,9 @@
             </item>
             <item row="3" column="1">
              <widget class="QDoubleSpinBox" name="doubleSpinBox_height">
+              <property name="suffix">
+               <string> μm</string>
+              </property>
               <property name="maximum">
                <double>9999999.000000000000000</double>
               </property>
@@ -249,6 +252,9 @@
             </item>
             <item row="4" column="1">
              <widget class="QDoubleSpinBox" name="doubleSpinBox_diameter">
+              <property name="suffix">
+               <string> μm</string>
+              </property>
               <property name="minimum">
                <double>0.000000000000000</double>
               </property>
@@ -266,6 +272,9 @@
             </item>
             <item row="5" column="1">
              <widget class="QDoubleSpinBox" name="doubleSpinBox_cavityAngle">
+              <property name="suffix">
+               <string> °</string>
+              </property>
               <property name="minimum">
                <double>-9999999.000000000000000</double>
               </property>
@@ -299,7 +308,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1326</width>
+     <width>1333</width>
      <height>20</height>
     </rect>
    </property>

@@ -367,6 +367,7 @@ void ParticleProxy::GetTrack(int beamNumber, const Angle &viewAngle,
 QString ParticleProxy::GetBeamDataString()
 {
 	QString res;
+	int f = 3, b = 16;
 
 	foreach (QString key, beamData.keys())
 	{
@@ -379,7 +380,6 @@ QString ParticleProxy::GetBeamDataString()
 
 			foreach (BeamInfo info, infos)
 			{
-				int f = 3, b = 16;
 				QString d = QString("0x%1").arg(info.number, f, b, QChar('0'))+"\n";
 				res += " "+dkey+"\t"+d;
 			}
@@ -392,6 +392,7 @@ QString ParticleProxy::GetBeamDataString()
 QString ParticleProxy::GetBeamDataString(const QString &searchLine)
 {
 	QString res;
+	int f = 3, b = 16;
 
 	foreach (QString key, beamData.keys())
 	{
@@ -407,7 +408,7 @@ QString ParticleProxy::GetBeamDataString(const QString &searchLine)
 
 				foreach (BeamInfo info, infos)
 				{
-					children += " "+dkey+"\t"+QString::number(info.number)+"\n";
+					children += " "+dkey+"\t"+QString("0x%1").arg(info.number, f, b, QChar('0'))+"\n";
 				}
 			}
 		}
